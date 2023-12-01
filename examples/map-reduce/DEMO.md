@@ -1,77 +1,8 @@
-The IO library consists of a number of ways to transform data.  To really understand the library well, I've created an example that will take every line of code and text and count the tokens and then reorder the tokens by frequency descending. Before considering every line of code and text, we will start small - with "to be or not to be".
+The IO library consists of a number of ways to transform data.  
 
-The first step in counting the tokens in "to be or not to be" is to break the string up into individual tokens and then assigning each token a frequency of 1.
+## Listing files
 
-```
-to - 1
-be - 1
-or - 1
-not - 1
-to - 1
-be - 1
-```
-
-We will call these token / frequency pairs token\_freq records.  The next step is to sort the token\_freq records such that the tokens which are identical are grouped together.  For now, we will assume that the best way to do this is sort based upon the text.
-
-```
-be - 1
-be - 1
-not - 1
-or - 1
-to - 1
-to - 1
-```
-
-Once these token\_freq records are sorted, they can be grouped and reduced where reducing accumulates the frequency found on each token\_freq record which has an equal string.
-
-```
-be - 2
-not - 1
-or - 1
-to - 2
-```
-
-Finally, the token\_freq records should be sorted by frequency descending.  We will also assume if the frequency is equal, that we will secondarily sort by token ascending.
-
-```
-be - 2
-to - 2
-not - 1
-or - 1
-```
-
-Conceptually, this should be pretty straight forward.  We could add a bit more complexity if the original line was "To be or not to be!".  In this case, it may be desirable to normalize the case of To and to to a common case (such as lower-case).  The explanation point might also be ignored.  To create our original tokens, we might first lower-case the whole string and then break the string on spaces and explanation points.  Of course, our text and code will be more complex, so there will likely be a need to break on a whole list of characters.
-
-I came up with the following characters for this code base.  I'm sure I'm missing some, but the goal isn't to do perfect tokenization.  
-
-```
-(*\"\',+-/\\| \t{});[].=&%<>!#`:
-```
-
-The second thing to consider is that to find every line of code and text within the repo, there is a need to find all of the files containing those lines.  Running a few find commands to see how much code there is yields the following within the IO library repo.
-
-TODO: update
-
-```
-$ find src include -name "*.[ch]*" -exec cat {} \; | wc
-   5114   16555  144432
-$ find . -name "*.md" -exec cat {} \; | wc
-   14589   70183  481292
-```
-
-or the number of files...
-```
-$ find . -name "*.[ch]" -exec ls {} \; | wc -l
-     11
-$ find . -name "*.md" -exec ls {} \; | wc -l
-      35
-```
-
-There are approximately 5k lines of code in 11 files and 15k lines of documentation in 35 files.  For our routine, we will use the IO library to locate those files based upon a directory, read the files a line at a time, lowercase each line, tokenize each line, sort the tokens alphabetically, reduce the frequencies, and finally sort by frequency descending followed by a secondary sort of tokens ascending.  
-
-## Listing the files
-
-io is a collection of useful input/output related functions and structures.  io\_list will find all of the files within a directory that matches your criteria.  Each file's name, size, and last modified time stamp will be returned to you.  The tag is meant for other purposes which will be explored later.  io\_list will return an array of io\_file\_info\_t structures which are defined as follows.
+io is a collection of useful input/output related functions and structures.  `io_list` will find all of the files within a directory that matches your criteria.  Each file's name, size, and last modified time stamp will be returned to you.  The tag is meant for other purposes which will be explored later.  `io_list` will return an array of `io_file_info_t` structures which are defined as follows.
 
 in `include/the-io-library/io.h`
 ```c
@@ -83,7 +14,7 @@ struct io_file_info_t {
 };
 ```
 
-and here's the prototype for io\_list...
+and here's the prototype for `io_list`...
 ```c
 io_file_info_t *io_list(const char *path, size_t *num_files,
                         bool (*file_valid)(const char *filename,
@@ -91,11 +22,11 @@ io_file_info_t *io_list(const char *path, size_t *num_files,
                         void *arg);
 ```
 
-io\_list will return an array of io\_file\_info\_t which has num\_files elements (set by io\_list) from the given path.  The file\_valid is a user callback that if provided can return true or false to indicate whether the file should be returned in the list.  The arg is passed through from io\_list call to the callback file\_valid.
+`io_list` will return an array of `io_file_info_t` which has `num_files` elements (set by `io_list`) from the given path.  The `file_valid` is a user callback that if provided can return true or false to indicate whether the file should be returned in the list.  The arg is passed through from `io_list` call to the callback `file_valid`.
 
 To follow along with code in the terminal, you will need to be in the examples/map-reduce directory.
 
-examples/map-reduce/src/list\_files.c
+`examples/map-reduce/src/list_files.c`:
 ```c
 #include "a-memory-library/aml_alloc.h"
 #include "a-memory-library/aml_pool.h"
