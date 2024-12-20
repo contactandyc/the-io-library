@@ -181,6 +181,9 @@ char *_io_read_file(size_t *len, const char *filename, const char *caller);
 char *_io_read_file(size_t *len, const char *filename);
 #endif
 
+/* Similar to io_read_file, except the file is allocated using the pool */
+char *io_pool_read_file(aml_pool_t *pool, size_t *len, const char *filename);
+
 /*
   Make the given directory if it doesn't already exist.  Return false if an
   error occurred.

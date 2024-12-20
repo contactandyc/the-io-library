@@ -386,6 +386,39 @@ void io_sort_file_info_by_filename_descending(io_file_info_t *files, size_t num_
     _sort_io_file_info_filename_descending(files, num_files);
 }
 
+char *io_pool_read_file(aml_pool_t *pool, size_t *len, const char *filename) {
+    *len = 0;
+    if (!filename)
+        return NULL;
+
+    int fd = open(filename, O_RDONLY);
+    if (fd == -1)
+        return NULL;
+
+    size_t length = io_file_size(filename);
+    char *buf = (char *)aml_pool_alloc(pool, length + 1);
+    if (buf) {
+        size_t s = length;
+        size_t pos = 0;
+        size_t chunk = 64 * 1024 * 1024;
+        while (s > chunk) {
+            if (read(fd, buf + pos, chunk) != chunk) {
+                close(fd);
+                return NULL;
+            }
+            pos += chunk;
+            s -= chunk;
+        }
+        if (read(fd, buf + pos, s) == (ssize_t)s) {
+            close(fd);
+            buf[length] = 0;
+            *len = length;
+            return buf;
+        }
+    }
+    close(fd);
+    return NULL;
+}
 
 #ifdef _AML_DEBUG_
 char *_io_read_file(size_t *len, const char *filename, const char *caller) {
