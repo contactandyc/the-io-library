@@ -4,6 +4,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <dirent.h>
+#include <errno.h>
 #include "the-io-library/io_data_store.h"
 #include "the-io-library/io.h"
 
@@ -78,14 +79,14 @@ char *io_data_store_read_file(io_data_store_t *h, size_t *file_length, const cha
     char file_path[256];
     generate_file_path(file_path, sizeof(file_path), h->base_path, filename);
 
-    return io_read_file(file_path, file_length);
+    return io_read_file(file_length, file_path);
 }
 
 char *io_data_store_pool_read_file(io_data_store_t *h, aml_pool_t *pool, size_t *file_length, const char *filename) {
     char file_path[256];
     generate_file_path(file_path, sizeof(file_path), h->base_path, filename);
 
-    return io_pool_read_file(pool, file_path, file_length);
+    return io_pool_read_file(pool, file_length, file_path);
 }
 
 // Write a file atomically

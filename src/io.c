@@ -18,7 +18,7 @@ limitations under the License.
 
 #include "a-memory-library/aml_alloc.h"
 #include "the-lz4-library/lz4.h"
-
+#include "the-macro-library/macro_sort.h"
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
