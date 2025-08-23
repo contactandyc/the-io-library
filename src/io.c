@@ -1,18 +1,6 @@
-/*
-Copyright 2019 Andy Curtis
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// SPDX-FileCopyrightText: 2019–2025 Andy Curtis <contactandyc@gmail.com>
+// SPDX-FileCopyrightText: 2024–2025 Knode.ai — technical questions: contact Andy (above)
+// SPDX-License-Identifier: Apache-2.0
 
 #include "the-io-library/io.h"
 
@@ -29,6 +17,11 @@ limitations under the License.
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <limits.h>
+
+#ifndef PATH_MAX
+#define PATH_MAX 4096  // Define a reasonable fallback if PATH_MAX is not defined
+#endif
 
 _macro_sort_compare(io_sort_records, cmp_arg, io_record_t);
 
@@ -71,7 +64,7 @@ io_format_t io_csv_delimiter(int delim) {
 
 io_format_t io_fixed(int size) { return size; }
 
-io_format_t io_prefix() { return 0; }
+io_format_t io_prefix(void) { return 0; }
 
 bool io_make_directory(const char *path) {
   DIR *d = opendir(path);
@@ -164,6 +157,36 @@ bool io_file_exists(const char *filename) {
   if (stat(filename, &sb) == -1 || (sb.st_mode & S_IFMT) != S_IFREG)
     return false;
   return true;
+}
+
+char *io_find_file_in_parents(const char *path) {
+  if (!path)
+    return NULL;
+
+  char cwd[PATH_MAX];
+  if (!getcwd(cwd, sizeof(cwd)))
+    return NULL;
+
+  struct stat sb;
+  char fullpath[PATH_MAX];
+
+  while (1) {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation"
+    snprintf(fullpath, sizeof(fullpath), "%s/%s", cwd, path);
+#pragma GCC diagnostic pop
+    if (stat(fullpath, &sb) == 0)
+      return aml_strdup(fullpath); // Found, return dynamically allocated string
+
+    // Move up one directory
+    char *last_slash = strrchr(cwd, '/');
+    if (!last_slash || last_slash == cwd) // Stop at root "/"
+      break;
+
+    *last_slash = '\0'; // Trim last directory
+  }
+
+  return NULL; // Not found
 }
 
 io_file_info_t *io_partition_file_info(aml_pool_t *pool, size_t *num_res,
@@ -275,13 +298,13 @@ __io_list(aml_pool_t *pool, const char *path, size_t *num_files,
     res = (io_file_info_t *)aml_pool_zalloc(
         pool, (sizeof(io_file_info_t) * root.num_files) + root.bytes);
   else {
-    if(caller) {
-        res = (io_file_info_t *)_aml_malloc_d(caller, (sizeof(io_file_info_t) * root.num_files) + root.bytes, false);
-        memset(res, 0, (sizeof(io_file_info_t) * root.num_files) + root.bytes);
-    }
-    else
-        res = (io_file_info_t *)aml_zalloc(
-            (sizeof(io_file_info_t) * root.num_files) + root.bytes);
+#ifdef _AML_DEBUG_
+    res = (io_file_info_t *)_aml_malloc_d(caller, (sizeof(io_file_info_t) * root.num_files) + root.bytes, false);
+    memset(res, 0, (sizeof(io_file_info_t) * root.num_files) + root.bytes);
+#else
+    res = (io_file_info_t *)aml_zalloc(
+        (sizeof(io_file_info_t) * root.num_files) + root.bytes);
+#endif
   }
   char *mem = (char *)(res + root.num_files);
   io_file_info_t *rp = res;
@@ -396,7 +419,7 @@ char *io_pool_read_file(aml_pool_t *pool, size_t *len, const char *filename) {
         return NULL;
 
     size_t length = io_file_size(filename);
-    char *buf = (char *)aml_pool_alloc(pool, length + 1);
+    char *buf = (char *)aml_pool_aalloc(pool, 64, length + 1);
     if (buf) {
         size_t s = length;
         size_t pos = 0;
@@ -416,6 +439,126 @@ char *io_pool_read_file(aml_pool_t *pool, size_t *len, const char *filename) {
             return buf;
         }
     }
+    close(fd);
+    return NULL;
+}
+
+bool io_read_chunk_into_buffer(char *buffer, size_t *len,
+                               const char *filename, size_t offset, size_t length)
+{
+    if (!filename || !buffer || length == 0) {
+        if (len)
+            *len = 0;
+        return false;
+    }
+
+    int fd = open(filename, O_RDONLY);
+    if (fd == -1) {
+        if (len)
+            *len = 0;
+        return false;
+    }
+
+    // Seek to the specified offset if needed.
+    if (offset > 0) {
+        off_t ret = lseek(fd, (off_t)offset, SEEK_SET);
+        if (ret == (off_t)-1) {
+            close(fd);
+            if (len)
+                *len = 0;
+            return false;
+        }
+    }
+
+    size_t bytes_remaining = length;
+    size_t pos = 0;
+    const size_t CHUNK = 64UL * 1024UL * 1024UL;  /* 64 MB */
+
+    // Read the file in CHUNK-sized blocks.
+    while (bytes_remaining > CHUNK) {
+        ssize_t r = read(fd, buffer + pos, CHUNK);
+        if (r != (ssize_t)CHUNK) {
+            close(fd);
+            if (len)
+                *len = pos;
+            return false;
+        }
+        pos += CHUNK;
+        bytes_remaining -= CHUNK;
+    }
+
+    // Read the final partial chunk.
+    ssize_t r = read(fd, buffer + pos, bytes_remaining);
+    if (r != (ssize_t)bytes_remaining) {
+        close(fd);
+        if (len)
+            *len = pos;
+        return false;
+    }
+
+    pos += bytes_remaining;
+    close(fd);
+    if (len)
+        *len = pos;
+    return true;
+}
+
+char *io_pool_read_chunk(aml_pool_t *pool, size_t *len,
+                         const char *filename, size_t offset, size_t length)
+{
+    *len = 0;
+    if (!filename || length == 0) {
+        return NULL;
+    }
+
+    int fd = open(filename, O_RDONLY);
+    if (fd == -1) {
+        /* Failed to open the file */
+        return NULL;
+    }
+
+    /* Seek to offset if requested */
+    if (offset > 0) {
+        off_t ret = lseek(fd, (off_t)offset, SEEK_SET);
+        if (ret == (off_t)-1) {
+            /* Seek failed */
+            close(fd);
+            return NULL;
+        }
+    }
+
+    /* Allocate space for 'length' bytes */
+    char *buf = (char *)aml_pool_aalloc(pool, 64, length);
+    if (!buf) {
+        close(fd);
+        return NULL;
+    }
+
+    size_t bytes_remaining = length;
+    size_t pos = 0;
+    /* Same chunk logic as in io_pool_read_file */
+    const size_t CHUNK = 64UL * 1024UL * 1024UL;  /* 64 MB */
+
+    /* Read in chunks until we've read 'length' bytes or fail */
+    while (bytes_remaining > CHUNK) {
+        ssize_t r = read(fd, buf + pos, CHUNK);
+        if (r != (ssize_t)CHUNK) {
+            /* Something went wrong or EOF reached prematurely */
+            close(fd);
+            return NULL;
+        }
+        pos += CHUNK;
+        bytes_remaining -= CHUNK;
+    }
+
+    /* Read the final partial chunk (which could be smaller or 0 if length was multiple of CHUNK) */
+    if (read(fd, buf + pos, bytes_remaining) == (ssize_t)bytes_remaining) {
+        close(fd);
+        *len = length;
+        return buf;
+    }
+
+    /* If we get here, the last read didn't match bytes_remaining */
     close(fd);
     return NULL;
 }
@@ -460,6 +603,123 @@ char *_io_read_file(size_t *len, const char *filename) {
         return buf;
       }
       aml_free(buf);
+      buf = NULL;
+    }
+  }
+  close(fd);
+  return NULL;
+}
+
+#ifdef _AML_DEBUG_
+char *_io_read_chunk(size_t *len, const char *filename, size_t offset, size_t length, const char *caller) {
+#else
+char *_io_read_chunk(size_t *len, const char *filename, size_t offset, size_t length) {
+#endif
+  /* Initialize *len = 0 in case of failure */
+  *len = 0;
+
+  /* Basic sanity checks */
+  if (!filename || !length) {
+    return NULL;
+  }
+
+  int fd = open(filename, O_RDONLY);
+  if (fd == -1) {
+    /* Could not open the file */
+    return NULL;
+  }
+
+  /* If offset > 0, seek to that position in the file */
+  if (offset > 0) {
+    off_t ret = lseek(fd, (off_t)offset, SEEK_SET);
+    if (ret == (off_t)-1) {
+      /* Seek failed */
+      close(fd);
+      return NULL;
+    }
+  }
+
+  /* Allocate a buffer of length+1 for a null terminator */
+#ifdef _AML_DEBUG_
+  char *buf = (char *)_aml_malloc_d(caller, length + 1, false);
+#else
+  char *buf = (char *)aml_malloc(length + 1);
+#endif
+
+  if (!buf) {
+    close(fd);
+    return NULL;
+  }
+
+  /* Read the data in a loop until we've read `length` or hit EOF/error */
+  size_t total_read = 0;
+  while (total_read < length) {
+    ssize_t r = read(fd, buf + total_read, length - total_read);
+    if (r < 0) {
+      /* Read error */
+      aml_free(buf);
+      close(fd);
+      return NULL;
+    } else if (r == 0) {
+      /* Reached EOF */
+      break;
+    }
+    total_read += (size_t)r;
+  }
+
+  /* We no longer need the file descriptor */
+  close(fd);
+
+  /* If we couldn’t read anything at all, return NULL (or handle differently) */
+  if (total_read == 0) {
+    aml_free(buf);
+    return NULL;
+  }
+
+  /* Null-terminate the buffer; total_read ≤ length */
+  buf[total_read] = '\0';
+
+  /* Set the output parameter to number of bytes actually read */
+  *len = total_read;
+
+  return buf;
+}
+
+char *io_read_file_aligned(size_t *len, size_t alignment, const char *filename) {
+  *len = 0;
+  if (!filename)
+    return NULL;
+
+  int fd = open(filename, O_RDONLY);
+  if (fd == -1)
+    return NULL;
+
+  size_t length = io_file_size(filename);
+  if((length % alignment) != 0) {
+    fprintf(stderr, "Error: File size is not a multiple of the alignment\n");
+    return NULL;
+  }
+  if (length) {
+    char *buf = (char *)aligned_alloc(alignment, length);
+    if (buf) {
+      size_t s = length;
+      size_t pos = 0;
+      size_t chunk = 16 * 1024 * 1024;
+      while (s > chunk) {
+        if (read(fd, buf + pos, chunk) != chunk) {
+          free(buf);
+          close(fd);
+          return NULL;
+        }
+        pos += chunk;
+        s -= chunk;
+      }
+      if (read(fd, buf + pos, s) == (ssize_t)s) {
+        close(fd);
+        *len = length;
+        return buf;
+      }
+      free(buf);
       buf = NULL;
     }
   }

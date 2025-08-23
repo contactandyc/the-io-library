@@ -1,7 +1,7 @@
 @PACKAGE_INIT@
 
 # The following line will get replaced with the paths to the library's include directory
-set(theiolibrary_INCLUDE_DIR "@PACKAGE_INCLUDE_DIR@")
+set(the-io-library_INCLUDE_DIR "@PACKAGE_INCLUDE_DIR@")
 
 # Include the targets file
-include("${CMAKE_CURRENT_LIST_DIR}/theiolibraryTargets.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/the-io-libraryTargets.cmake")

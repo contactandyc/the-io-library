@@ -1,18 +1,6 @@
-/*
-Copyright 2019 Andy Curtis
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// SPDX-FileCopyrightText: 2019–2025 Andy Curtis <contactandyc@gmail.com>
+// SPDX-FileCopyrightText: 2024–2025 Knode.ai — technical questions: contact Andy (above)
+// SPDX-License-Identifier: Apache-2.0
 
 #ifndef _io_H
 #define _io_H
@@ -38,7 +26,7 @@ io_format_t io_csv_delimiter(int delim);
 /* fixed length records of a given size */
 io_format_t io_fixed(int size);
 /* variable length records with a 4 byte prefix length */
-io_format_t io_prefix();
+io_format_t io_prefix(void);
 
 /* common record structure for the io_format's above */
 typedef struct {
@@ -163,6 +151,10 @@ bool io_directory(const char *filename);
 /* is this a file */
 bool io_file(const char *filename);
 
+/* this will return the full path of the file if it exists by searching
+   the current directory and then parent directories. */
+char *io_find_file_in_parents(const char *path);
+
 /* Read the contents of filename into a buffer and return it's length.  The
    buffer should be freed using aml_free.
 
@@ -181,8 +173,30 @@ char *_io_read_file(size_t *len, const char *filename, const char *caller);
 char *_io_read_file(size_t *len, const char *filename);
 #endif
 
+#ifdef _AML_DEBUG_
+#define io_read_chunk(len, filename, offset, length)                                \
+  _io_read_chunk(len, filename, offset, length, aml_file_line_func("io_read_file"))
+char *_io_read_chunk(size_t *len, const char *filename, size_t offset, size_t length, const char *caller);
+#else
+#define io_read_chunk(len, filename) _io_read_file(len, filename, offset, length)
+char *_io_read_chunk(size_t *len, const char *filename, size_t offset, size_t length);
+#endif
+
+
+bool io_read_chunk_into_buffer(char *buffer, size_t *len,
+                               const char *filename, size_t offset, size_t length);
+
+
+/* The memory allocated must be freed using free (NOTE THAT THIS IS NOT aml_free for this one case!).
+   The size of the file must also be a multiple of alignment. */
+char *io_read_file_aligned(size_t *len, size_t alignment, const char *filename);
+
 /* Similar to io_read_file, except the file is allocated using the pool */
 char *io_pool_read_file(aml_pool_t *pool, size_t *len, const char *filename);
+
+char *io_pool_read_chunk(aml_pool_t *pool, size_t *len,
+                         const char *filename, size_t offset, size_t length);
+
 
 /*
   Make the given directory if it doesn't already exist.  Return false if an
@@ -206,7 +220,7 @@ bool io_extension(const char *filename, const char *extension);
 
 /* compare the first 32 or 64 bits of a record */
 static inline int io_compare_uint32_t(const io_record_t *p1,
-                                         const io_record_t *p2, void *tag) {
+                                         const io_record_t *p2, void *tag __attribute__((unused))) {
   uint32_t *a = (uint32_t *)p1->record;
   uint32_t *b = (uint32_t *)p2->record;
   if (*a != *b)
@@ -215,7 +229,7 @@ static inline int io_compare_uint32_t(const io_record_t *p1,
 }
 
 static inline int io_compare_uint64_t(const io_record_t *p1,
-                                         const io_record_t *p2, void *tag) {
+                                         const io_record_t *p2, void *tag __attribute__((unused))) {
   uint64_t *a = (uint64_t *)p1->record;
   uint64_t *b = (uint64_t *)p2->record;
   if (*a != *b)
@@ -225,28 +239,28 @@ static inline int io_compare_uint64_t(const io_record_t *p1,
 
 /* split by the first 32 or 64 bits of a record */
 static inline size_t io_split_by_uint32_t(const io_record_t *r,
-                                             size_t num_part, void *tag) {
+                                             size_t num_part, void *tag __attribute__((unused))) {
   uint32_t *a = (uint32_t *)r->record;
   uint32_t np = num_part;
   return (*a) % np;
 }
 
 static inline size_t io_split_by_uint64_t(const io_record_t *r,
-                                             size_t num_part, void *tag) {
+                                             size_t num_part, void *tag __attribute__((unused))) {
   uint64_t *a = (uint64_t *)r->record;
   return (*a) % num_part;
 }
 
 /* split by the second 32 or 64 bits of a record */
 static inline size_t io_split_by_uint32_t_2(const io_record_t *r,
-                                               size_t num_part, void *tag) {
+                                               size_t num_part, void *tag __attribute__((unused))) {
   uint32_t *a = (uint32_t *)r->record;
   uint32_t np = num_part;
   return (a[1]) % np;
 }
 
 static inline size_t io_split_by_uint64_t_2(const io_record_t *r,
-                                               size_t num_part, void *tag) {
+                                               size_t num_part, void *tag __attribute__((unused))) {
   uint64_t *a = (uint64_t *)r->record;
   return (a[1]) % num_part;
 }

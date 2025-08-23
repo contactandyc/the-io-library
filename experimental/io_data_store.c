@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2019–2025 Andy Curtis <contactandyc@gmail.com>
+// SPDX-FileCopyrightText: 2024–2025 Knode.ai — technical questions: contact Andy (above)
+// SPDX-License-Identifier: Apache-2.0
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -41,18 +45,18 @@ static bool create_directory(const char *path) {
 // Internal helper: Generate file path from filename and base path
 static void generate_file_path(char *buffer, size_t buffer_size, const char *base_path, const char *filename) {
     uint32_t hash = fnv1a_24(filename);
-    snprintf(buffer, buffer_size, "%s/%02x/%02x/%02x/%02x/%s", base_path,
+    snprintf(buffer, buffer_size, "%s/%03x/%03x/%03x/%03x/%s", base_path,
              (hash >> 18) & 0x3F, (hash >> 12) & 0x3F, (hash >> 6) & 0x3F, hash & 0x3F, filename);
 }
 
 // Structure definitions
 struct io_data_store_s {
-    char base_path[256];
+    char base_path[512];
 };
 
 struct io_data_store_cursor_s {
     DIR *dirs[4];
-    char current_path[256];
+    char current_path[512];
 };
 
 io_data_store_t *io_data_store_init(const char *path) {
@@ -69,21 +73,21 @@ void io_data_store_destroy(io_data_store_t *h) {
 
 // Check if a file exists
 bool io_data_store_exists(io_data_store_t *h, const char *filename) {
-    char file_path[256];
+    char file_path[512];
     generate_file_path(file_path, sizeof(file_path), h->base_path, filename);
     return access(file_path, F_OK) == 0;
 }
 
 // Read a file into a buffer
 char *io_data_store_read_file(io_data_store_t *h, size_t *file_length, const char *filename) {
-    char file_path[256];
+    char file_path[512];
     generate_file_path(file_path, sizeof(file_path), h->base_path, filename);
 
     return io_read_file(file_length, file_path);
 }
 
 char *io_data_store_pool_read_file(io_data_store_t *h, aml_pool_t *pool, size_t *file_length, const char *filename) {
-    char file_path[256];
+    char file_path[512];
     generate_file_path(file_path, sizeof(file_path), h->base_path, filename);
 
     return io_pool_read_file(pool, file_length, file_path);
@@ -92,7 +96,7 @@ char *io_data_store_pool_read_file(io_data_store_t *h, aml_pool_t *pool, size_t 
 // Write a file atomically
 void io_data_store_write_file(io_data_store_t *h, const char *filename, const char *data, size_t data_length,
                               uint32_t temp_id) {
-    char file_path[256];
+    char file_path[512];
     generate_file_path(file_path, sizeof(file_path), h->base_path, filename);
     if(!io_data_store_exists(h, filename)) {
         create_directory(file_path); // Ensure directories exist
@@ -112,7 +116,7 @@ void io_data_store_write_file(io_data_store_t *h, const char *filename, const ch
 
 // Remove a file
 void io_data_store_remove_file(io_data_store_t *h, const char *filename) {
-    char file_path[256];
+    char file_path[512];
     generate_file_path(file_path, sizeof(file_path), h->base_path, filename);
     unlink(file_path);
 }

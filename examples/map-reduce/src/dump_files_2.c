@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2019–2025 Andy Curtis <contactandyc@gmail.com>
+// SPDX-FileCopyrightText: 2024–2025 Knode.ai — technical questions: contact Andy (above)
+// SPDX-License-Identifier: Apache-2.0
+
 #include "a-memory-library/aml_alloc.h"
 #include "a-memory-library/aml_pool.h"
 #include "the-io-library/io.h"

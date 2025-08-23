@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2019–2025 Andy Curtis <contactandyc@gmail.com>
+// SPDX-FileCopyrightText: 2024–2025 Knode.ai — technical questions: contact Andy (above)
+// SPDX-License-Identifier: Apache-2.0
+
 #ifndef _io_in_H
 #define _io_in_H
 
@@ -169,7 +173,7 @@ io_in_t *io_in_init_from_list(io_file_info_t *files, size_t num_files,
                               io_in_options_t *options);
 
 /* Create an empty cursor - still must be destroyed and won't return anything */
-io_in_t *io_in_empty();
+io_in_t *io_in_empty(void);
 
 /* Useful to limit the number of records for testing */
 void io_in_limit(io_in_t *h, size_t limit);

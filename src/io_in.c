@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2019–2025 Andy Curtis <contactandyc@gmail.com>
+// SPDX-FileCopyrightText: 2024–2025 Knode.ai — technical questions: contact Andy (above)
+// SPDX-License-Identifier: Apache-2.0
+
 #include "the-io-library/io_in.h"
 
 #include "the-lz4-library/lz4.h"
@@ -491,7 +495,7 @@ void _io_in_empty(io_in_t *h) {
   h->advance_tmp = h->advance;
 }
 
-io_in_t *io_in_empty() {
+io_in_t *io_in_empty(void) {
   io_in_t *h = (io_in_t *)aml_zalloc(sizeof(io_in_t));
   _io_in_empty(h);
   return h;
@@ -1048,7 +1052,7 @@ char *io_in_lz4_read_delimited(io_in_t *h, int32_t *rlen, int delim,
 }
 
 
-char *io_in_use_buffer(io_in_t *h, io_in_buffer_t *b, uint32_t len, int32_t *rlen, bool cap_length) {
+char *io_in_use_buffer(io_in_t *h, io_in_buffer_t *b, uint32_t len, int32_t *rlen) {
   /* where length is greater than the
      internal buffer.  In this case, a buffer is used and
      all data is copied into it. */
@@ -1063,21 +1067,26 @@ char *io_in_use_buffer(io_in_t *h, io_in_buffer_t *b, uint32_t len, int32_t *rle
     memcpy(tmp.buffer, b->buffer + b->pos, tmp.used);
   b->pos = b->used = 0;
   len -= tmp.used;
-  if (len) {
+  while(len) {
     fill_blocks(h, b);
-    if (len > b->used) {
-      if(cap_length)
-        len = b->used;
-      else {
-        b->pos = b->used;
-        aml_buffer_destroy(h->bh);
-        h->bh = NULL;
-        return NULL;
-      }
+    if (b->used == 0 && b->eof) {
+        if (rlen)
+            *rlen = tmp.pos;
+        return tmp.buffer;
     }
-    b->pos = len;
-    tmp.pos += len;
-    memcpy(tmp.buffer + tmp.used, b->buffer, len);
+    else if (len <= b->used) {
+        memcpy(tmp.buffer + tmp.used, b->buffer, len);
+        b->pos = len;
+        tmp.pos += len;
+        tmp.used += len;
+        break;
+    } else {
+        memcpy(tmp.buffer + tmp.used, b->buffer, b->used);
+        tmp.used += b->used;
+        tmp.pos += b->used;
+        len -= b->used;
+        b->pos = b->used = 0;
+    }
   }
   if(rlen)
     *rlen = tmp.pos;
@@ -1111,7 +1120,7 @@ char *io_in_lz4_readz(io_in_t *h, int32_t *rlen, uint32_t len) {
       return p;
     }
 
-    return io_in_use_buffer(h, b, len, rlen, true);
+    return io_in_use_buffer(h, b, len, rlen);
   } else {
     if (b->eof) {
       *rlen = b->used - b->pos;
@@ -1125,7 +1134,7 @@ char *io_in_lz4_readz(io_in_t *h, int32_t *rlen, uint32_t len) {
     reset_block(b);
     fill_blocks(h, b);
     if (len > b->used)
-      return io_in_use_buffer(h, b, len, rlen, false);
+      return io_in_use_buffer(h, b, len, rlen);
     b->pos = len;
     *rlen = len;
     char *ep = b->buffer + len;
@@ -1150,7 +1159,7 @@ char *io_in_lz4_read(io_in_t *h, uint32_t len) {
       b->pos = b->used;
       return NULL;
     }
-    return io_in_use_buffer(h, b, len, NULL, false);
+    return io_in_use_buffer(h, b, len, NULL);
   } else {
     if (b->eof) {
       b->pos = b->used;
@@ -1159,7 +1168,7 @@ char *io_in_lz4_read(io_in_t *h, uint32_t len) {
     reset_block(b);
     fill_blocks(h, b);
     if (len > b->used)
-      return io_in_use_buffer(h, b, len, NULL, false);
+      return io_in_use_buffer(h, b, len, NULL);
     b->pos = len;
     return b->buffer;
   }

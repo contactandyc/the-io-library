@@ -42,3 +42,10 @@ See [map-reduce demo](examples/map-reduce/DEMO.md) for a more detailed examples.
 - **io_split_by_uint32_t_2**, **io_split_by_uint64_t_2**: Partitions records based on the second 32 or 64 bits.
 
 The IO Library offers a range of functionalities that make it ideal for applications requiring sophisticated file handling and data processing capabilities. Its modular design, coupled with its integration with other libraries, ensures efficient and scalable solutions for a wide range of I/O operations.
+
+## Dependencies
+
+* [A cmake library](https://github.com/knode-ai-open-source/a-cmake-library) needed for the cmake build
+* [A memory library](https://github.com/knode-ai-open-source/a-memory-library) for the memory handling
+* [The macro library](https://github.com/knode-ai-open-source/the-macro-library) for sorting, searching, and conversions
+* [The LZ4 Library](https://github.com/knode-ai-open-source/the-lz4-library) for compression
