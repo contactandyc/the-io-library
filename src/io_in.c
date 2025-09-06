@@ -639,29 +639,36 @@ io_in_t *_io_in_init(const char *filename, int fd, bool can_close, void *buf,
 
 io_record_t *advance_file_list(io_in_t *hp) {
   io_in_list_t *h = (io_in_list_t *)hp;
-  if (!h)
-    return NULL;
+  if (!h) return NULL;
 
   h->num_current = 0;
-  io_record_t *r = h->cur_in->advance(h->cur_in);
-  if (!r) {
-    io_in_destroy(h->cur_in);
-    h->cur_in = NULL;
-    io_in_options_t opts;
-    while (!h->cur_in && h->filep < h->fileep) {
-      opts = h->options;
+
+  io_record_t *r = NULL;
+  while (1) {
+    if (!h->cur_in) {
+      // Try to open the next file
+      if (h->filep >= h->fileep) {
+        _io_in_empty(hp);   // No more files → empty cursor
+        return NULL;
+      }
+
+      io_in_options_t opts = h->options;
       if (h->filep[0].size < opts.buffer_size)
         opts.buffer_size = h->filep[0].size;
       opts.tag = h->filep[0].tag;
       h->cur_in = io_in_init(h->filep[0].filename, &opts);
       h->filep++;
+      continue;  // loop again with new cur_in
     }
-    if (!h->cur_in) {
-      _io_in_empty(hp);
-      return NULL;
-    }
+
     r = h->cur_in->advance(h->cur_in);
+    if (r) break;
+
+    // EOF → destroy and retry next file
+    io_in_destroy(h->cur_in);
+    h->cur_in = NULL;
   }
+
   h->current = r;
   h->num_current = 1;
   return r;
@@ -669,10 +676,6 @@ io_record_t *advance_file_list(io_in_t *hp) {
 
 io_record_t *advance_unique_file_list(io_in_t *hp, size_t *num_r) {
   io_in_list_t *h = (io_in_list_t *)hp;
-  if (!h) {
-    *num_r = 0;
-    return NULL;
-  }
   io_record_t *r = h->advance(hp);
   *num_r = h->num_current;
   return r;
@@ -680,8 +683,9 @@ io_record_t *advance_unique_file_list(io_in_t *hp, size_t *num_r) {
 
 io_in_t *io_in_init_from_list(io_file_info_t *files, size_t num_files,
                               io_in_options_t *options) {
-  if (!num_files)
-    return NULL;
+  if (!num_files) {
+    return io_in_empty();  /* Always return a valid io_in_t */
+  }
 
   io_in_options_t opts2;
   if (!options) {
@@ -694,9 +698,10 @@ io_in_t *io_in_init_from_list(io_file_info_t *files, size_t num_files,
   h->file_list = (io_file_info_t *)(h + 1);
   h->type = IO_IN_LIST_TYPE;
   h->options = *options;
+
   io_file_info_t *fp = h->file_list;
   for (size_t i = 0; i < num_files; i++) {
-    if (files[i].size) {
+    if (files[i].size > 0) {   /* skip zero-length files */
       *fp = files[i];
       fp->filename = aml_strdup(fp->filename);
       fp++;
@@ -704,6 +709,13 @@ io_in_t *io_in_init_from_list(io_file_info_t *files, size_t num_files,
   }
   h->filep = h->file_list;
   h->fileep = fp;
+
+  /* If no usable files -> return an empty input */
+  if (h->filep == h->fileep) {
+    aml_free(h);
+    return io_in_empty();
+  }
+
   io_in_options_t opts;
   while (!h->cur_in && h->filep < h->fileep) {
     opts = h->options;
@@ -713,6 +725,12 @@ io_in_t *io_in_init_from_list(io_file_info_t *files, size_t num_files,
     h->cur_in = io_in_init(h->filep[0].filename, &opts);
     h->filep++;
   }
+
+  if (!h->cur_in) {
+    aml_free(h);
+    return io_in_empty();
+  }
+
   h->advance = advance_file_list;
   h->advance_unique = advance_unique_file_list;
   h->advance_unique_tmp = h->advance_unique;
@@ -720,48 +738,37 @@ io_in_t *io_in_init_from_list(io_file_info_t *files, size_t num_files,
   return (io_in_t *)h;
 }
 
-void io_in_destroy_from_list(io_in_t *hp) {
-  io_in_list_t *h = (io_in_list_t *)hp;
-  if (!h)
-    return;
-  if (h->cur_in)
-    io_in_destroy(h->cur_in);
-  h->filep = h->file_list;
-  while (h->filep < h->fileep) {
-    aml_free(h->filep->filename);
-    h->filep++;
-  }
-  aml_free(h);
-}
-
 io_record_t *advance_cb(io_in_t *hp) {
   io_in_cb_t *h = (io_in_cb_t *)hp;
-  if (!h)
-    return NULL;
-
   h->num_current = 0;
-  io_record_t *r = h->cur_in->advance(h->cur_in);
-  if (!r) {
-    io_in_destroy(h->cur_in);
-    h->cur_in = h->cb(h->arg);
+  io_record_t *r = NULL;
+
+  while (1) {
     if (!h->cur_in) {
-      _io_in_empty(hp);
-      return NULL;
+      h->cur_in = h->cb(h->arg);
+      if (!h->cur_in) {
+        _io_in_empty(hp);   // Callback produced nothing → done
+        return NULL;
+      }
+      continue;  // try again with new cur_in
     }
+
     r = h->cur_in->advance(h->cur_in);
+    if (r) break;
+
+    // EOF → destroy and retry callback
+    io_in_destroy(h->cur_in);
+    h->cur_in = NULL;
   }
+
   h->current = r;
   h->num_current = 1;
   return r;
 }
 
 io_record_t *advance_unique_cb(io_in_t *hp, size_t *num_r) {
-  if (!hp) {
-    *num_r = 0;
-    return NULL;
-  }
   io_in_cb_t *h = (io_in_cb_t *)hp;
-  io_record_t *r = h->advance(hp);
+  io_record_t *r = advance_cb(hp);  // already Option 1 safe
   *num_r = h->num_current;
   return r;
 }
@@ -769,7 +776,7 @@ io_record_t *advance_unique_cb(io_in_t *hp, size_t *num_r) {
 io_in_t *io_in_init_from_cb(io_in_init_cb cb, void *arg) {
   io_in_t *cur = cb(arg);
   if(!cur)
-    return NULL;
+    return io_in_empty();
 
   io_in_cb_t *h = (io_in_cb_t *)aml_zalloc(
       sizeof(io_in_cb_t));
@@ -1672,6 +1679,10 @@ io_in_t *io_in_records_init(io_record_t *records, size_t num_records,
     io_in_options_init(options);
   }
 
+  if (num_records == 0) {
+    return io_in_empty();
+  }
+
   io_in_records_t *h = (io_in_records_t *)aml_zalloc(sizeof(io_in_records_t));
   h->options = *options;
   h->type = IO_IN_RECORDS_TYPE;
@@ -1788,4 +1799,22 @@ void io_in_out_group2(io_in_t *in, io_out_t *out, io_out_t *out2,
   while ((r = io_in_advance_group(in, &num_r, &more_records, compare,
                                   compare_arg)) != NULL)
     group(out, out2, r, num_r, more_records, arg);
+}
+
+void io_in_destroy_from_list(io_in_t *hp) {
+  io_in_list_t *h = (io_in_list_t *)hp;
+  if (!h) return;
+
+  if (h->cur_in)
+    io_in_destroy(h->cur_in);
+
+  /* Free the filenames we duplicated in io_in_init_from_list */
+  io_file_info_t *p = h->file_list;
+  while (p && p < h->fileep) {
+    if (p->filename)
+      aml_free(p->filename);
+    ++p;
+  }
+
+  aml_free(h);
 }
