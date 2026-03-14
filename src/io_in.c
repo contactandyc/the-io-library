@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2019–2025 Andy Curtis <contactandyc@gmail.com>
+// SPDX-FileCopyrightText: 2019–2026 Andy Curtis <contactandyc@gmail.com>
 // SPDX-FileCopyrightText: 2024–2025 Knode.ai — technical questions: contact Andy (above)
 // SPDX-License-Identifier: Apache-2.0
 
@@ -250,6 +250,9 @@ io_record_t *_advance_prefix(io_in_t *h) {
       h->num_current = 0;
       return NULL;
     }
+  }
+  else {
+    printf("Empty record");
   }
   h->rec.length = length;
   h->rec.record = p;
@@ -1483,6 +1486,18 @@ io_record_t *io_in_ext_advance(io_in_t *hp) {
     h->active[0] = in;
     h->num_active = 1;
     h->current = io_in_current(in);
+
+    /* Defensive guard: reject bogus EOF records */
+    if (!h->current || h->current->length == 0) {
+      fprintf(stderr,
+              "[WARN] io_in_ext_advance got empty record from %s (length=%zu)\n",
+              io_in_base_filename(in->base),
+              h->current ? h->current->length : (size_t)-1);
+      h->current = NULL;
+      h->num_active = 0;
+      return NULL;
+    }
+
     return h->current;
   }
   _io_in_empty(hp);

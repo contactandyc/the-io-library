@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2019–2025 Andy Curtis <contactandyc@gmail.com>
+// SPDX-FileCopyrightText: 2019–2026 Andy Curtis <contactandyc@gmail.com>
 // SPDX-FileCopyrightText: 2024–2025 Knode.ai — technical questions: contact Andy (above)
 // SPDX-License-Identifier: Apache-2.0
 
@@ -27,6 +27,7 @@ typedef bool (*io_out_write_cb)(io_out_t *h, const void *d, size_t len);
 const int IO_OUT_NORMAL_TYPE = 0;
 const int IO_OUT_PARTITIONED_TYPE = 1;
 const int IO_OUT_SORTED_TYPE = 2;
+const int IO_OUT_SORTED_THEN_PARTITIONED_TYPE = 3;
 
 struct io_out_s {
   int type;
@@ -330,6 +331,7 @@ static io_out_t *_io_out_init_lz4(const char *filename, int fd, bool fd_owner,
   h->buffer_pos2 = header_size;
   h->options = *options;
   h->write_d = _io_out_write_lz4;
+  h->fd_owner = fd_owner;
   return h;
 }
 
@@ -424,6 +426,7 @@ static io_out_t *_io_out_init(const char *filename, int fd, bool fd_owner,
     }
   }
   h->write_d = _io_out_write;
+  h->fd_owner = fd_owner;
   return h;
 }
 
@@ -881,13 +884,20 @@ io_out_t *io_out_partitioned_init(const char *filename,
     h->part_options.buffer_size = options->buffer_size / h->num_partitions;
     h->ext_part_options.partition = NULL;
 
-    if (!h->ext_options.sort_while_partitioning) {
+    if (!h->ext_options.sort_while_partitioning && h->ext_options.compare) {
       io_out_options_format(&(h->part_options), io_prefix());
       h->part_options.write_ack_file = false;
     }
 
     size_t tmp_name_len = strlen(filename) + 40;
     char *tmp_name = (char *)aml_malloc(tmp_name_len);
+
+    for (size_t i = 0; i < h->num_partitions; i++) {
+      suffix_filename_with_id(tmp_name, tmp_name_len, filename, i, NULL, false);
+      int fd = open(tmp_name, O_WRONLY | O_CREAT | O_TRUNC, 0777);
+      if (fd >= 0) close(fd);
+    }
+
     for (size_t i = 0; i < h->num_partitions; i++) {
       // printf("%s\n", tmp_name);
       if (h->ext_options.sort_while_partitioning || !h->ext_options.compare) {
@@ -989,6 +999,86 @@ void _io_out_partitioned_destroy(io_out_t *hp) {
   }
 }
 
+/* ============================================================
+   Merge all partition outputs into a single globally-sorted cursor
+   ============================================================ */
+static io_in_t *io_out_partitioned_merged_in(io_out_partitioned_t *h) {
+  /* Ensure partitions are finalized before reading */
+  _io_out_partitioned_destroy((io_out_t *)h);
+
+  io_in_options_t in_opts;
+  io_in_options_init(&in_opts);
+  io_in_options_buffer_size(&in_opts, h->options.buffer_size / 2);
+  io_in_options_format(&in_opts, io_prefix());
+
+  /* Create a merged reader using the same comparator/reducer */
+  io_in_t *merged = io_in_ext_init(
+      h->ext_part_options.compare,
+      h->ext_part_options.compare_arg,
+      &in_opts);
+  if (h->ext_part_options.reducer)
+    io_in_ext_reducer(
+        merged,
+        h->ext_part_options.reducer,
+        h->ext_part_options.reducer_arg);
+
+  /* Add each partition file as an input stream */
+  size_t tmp_len = strlen(h->filename) + 40;
+  char *tmp = (char *)aml_malloc(tmp_len);
+
+  for (size_t i = 0; i < h->num_partitions; i++) {
+    suffix_filename_with_id(tmp, tmp_len, h->filename, i, NULL, false);
+    io_in_t *in = io_in_init(tmp, &in_opts);
+    if (in)
+      io_in_ext_add(merged, in, i);
+  }
+
+  aml_free(tmp);
+  return merged;
+}
+
+/* ============================================================
+   Sequentially iterate over all partition files (no compare)
+   ============================================================ */
+typedef struct {
+  size_t idx;
+  size_t num_partitions;
+  char *filename;
+  io_in_options_t in_opts;
+  char *tmp;
+} seq_cursor_ctx_t;
+
+/* callback to open the next partition when iterating sequentially */
+static io_in_t *seq_next_partition(void *arg) {
+  seq_cursor_ctx_t *ctx = (seq_cursor_ctx_t *)arg;
+  if (ctx->idx >= ctx->num_partitions)
+    return NULL;
+
+  suffix_filename_with_id(ctx->tmp, strlen(ctx->filename) + 40,
+                          ctx->filename, ctx->idx, NULL, false);
+  ctx->idx++;
+  io_in_t *in = io_in_init(ctx->tmp, &ctx->in_opts);
+  return in;
+}
+
+/* create an io_in_t that sequentially visits each partition file */
+static io_in_t *io_out_partitioned_sequential_in(io_out_partitioned_t *h) {
+  _io_out_partitioned_destroy((io_out_t *)h);
+
+  seq_cursor_ctx_t *ctx = (seq_cursor_ctx_t *)aml_zalloc(sizeof(*ctx));
+  ctx->idx = 0;
+  ctx->num_partitions = h->num_partitions;
+  ctx->filename = h->filename;
+  io_in_options_init(&ctx->in_opts);
+  io_in_options_buffer_size(&ctx->in_opts, h->options.buffer_size / 2);
+  io_in_options_format(&ctx->in_opts, io_prefix());
+  ctx->tmp = (char *)aml_malloc(strlen(h->filename) + 40);
+
+  /* io_in_init_from_cb automatically destroys ctx when done */
+  io_in_t *in = io_in_init_from_cb(seq_next_partition, ctx);
+  return in;
+}
+
 io_in_t *io_out_partitioned_in(io_out_t *hp) {
   _io_out_partitioned_destroy(hp);
   /*  TODO:
@@ -1051,6 +1141,27 @@ typedef struct {
   io_out_ext_options_t partition_options;
 } io_out_sorted_t;
 
+struct io_out_sorted_then_partitioned_s; /* forward tag */
+
+typedef struct io_out_sorted_then_partitioned_s {
+  int type;
+  io_out_options_t options;
+  io_out_write_cb write_record;
+
+  char *filename;                 /* final partition base filename */
+  io_out_t *sorted;               /* inner global-sort writer      */
+  io_out_ext_options_t ext_options; /* original ext opts (keep compare for later joins) */
+} io_out_sorted_then_partitioned_t;
+
+/* prototypes used earlier in the file */
+static io_out_t *io_out_sorted_then_partitioned_init(const char *filename,
+                                                     io_out_options_t *options,
+                                                     io_out_ext_options_t *ext_options);
+static void io_out_sorted_then_partitioned_destroy(io_out_t *hp);
+static bool write_stp_record(io_out_t *hp, const void *d, size_t len);
+/* io_out_in() also calls this, so make sure it’s visible before io_out_in */
+static io_in_t *io_out_sorted_then_partitioned_in(io_out_t *hp);
+
 bool write_sorted_record(io_out_t *hp, const void *d, size_t len);
 
 static void _extra_add(io_out_t *hp, void *p, int type) {
@@ -1071,15 +1182,30 @@ static void _extra_add(io_out_t *hp, void *p, int type) {
 }
 
 void io_out_sorted_add_in(io_out_t *hp, io_in_t *in) {
-  _extra_add(hp, in, EXTRA_IN);
+  if (hp->type == IO_OUT_SORTED_THEN_PARTITIONED_TYPE) {
+    io_out_sorted_then_partitioned_t *h = (io_out_sorted_then_partitioned_t *)hp;
+    io_out_sorted_add_in(h->sorted, in);
+  } else {
+    _extra_add(hp, in, EXTRA_IN);
+  }
 }
 
 void io_out_sorted_add_file_to_remove(io_out_t *hp, const char *filename) {
-  _extra_add(hp, (void *)filename, EXTRA_FILE_TO_REMOVE);
+  if (hp->type == IO_OUT_SORTED_THEN_PARTITIONED_TYPE) {
+    io_out_sorted_then_partitioned_t *h = (io_out_sorted_then_partitioned_t *)hp;
+    io_out_sorted_add_file_to_remove(h->sorted, filename);
+  } else {
+    _extra_add(hp, (void *)filename, EXTRA_FILE_TO_REMOVE);
+  }
 }
 
 void io_out_sorted_add_ack_file(io_out_t *hp, const char *filename) {
-  _extra_add(hp, (void *)filename, EXTRA_ACK_FILE);
+  if (hp->type == IO_OUT_SORTED_THEN_PARTITIONED_TYPE) {
+    io_out_sorted_then_partitioned_t *h = (io_out_sorted_then_partitioned_t *)hp;
+    io_out_sorted_add_ack_file(h->sorted, filename);
+  } else {
+    _extra_add(hp, (void *)filename, EXTRA_ACK_FILE);
+  }
 }
 
 static void tmp_filename(char *dest, const char *filename, uint32_t n,
@@ -1119,6 +1245,11 @@ static io_in_t *_in_from_buffer(io_out_sorted_t *h, io_out_buffer_t *b) {
 
 io_out_t *io_out_sorted_init(const char *filename, io_out_options_t *options,
                              io_out_ext_options_t *ext_options) {
+  if (!ext_options->compare) {
+      fprintf(stderr, "ERROR: io_out_sorted_init requires a compare function\n");
+      abort();  // or return NULL
+  }
+
   io_out_options_t opts;
   if (!options) {
     options = &opts;
@@ -1147,6 +1278,7 @@ io_out_t *io_out_sorted_init(const char *filename, io_out_options_t *options,
   h->ext_options = *ext_options;
   h->partition_options = *ext_options;
   h->partition_options.compare = NULL;
+  h->partition_options.sort_before_partitioning = false;
   h->options = *options;
 
   io_in_options_init(&(h->file_options));
@@ -1258,11 +1390,12 @@ void write_sorted(io_out_sorted_t *h) {
 }
 
 void io_out_tag(io_out_t *hp, int tag) {
-  io_out_sorted_t *h = (io_out_sorted_t *)hp;
-  if (h->type != IO_OUT_SORTED_TYPE)
-    return;
-
-  h->tag = tag;
+  if (hp->type == IO_OUT_SORTED_TYPE) {
+    ((io_out_sorted_t *)hp)->tag = tag;
+  } else if (hp->type == IO_OUT_SORTED_THEN_PARTITIONED_TYPE) {
+    io_out_sorted_then_partitioned_t *h = (io_out_sorted_then_partitioned_t *)hp;
+    io_out_tag(h->sorted, tag); /* delegate */
+  }
 }
 
 io_in_t *_io_out_sorted_in(io_out_t *hp) {
@@ -1332,16 +1465,47 @@ io_in_t *_io_out_sorted_in(io_out_t *hp) {
 
 io_in_t *io_out_in(io_out_t *hp) {
   io_in_t *in = NULL;
-  if (hp->type == IO_OUT_SORTED_TYPE) {
+
+  switch (hp->type) {
+  case IO_OUT_SORTED_TYPE:
     in = _io_out_sorted_in(hp);
     if (in)
       io_in_destroy_out(in, hp, NULL);
     else
       io_out_destroy(hp);
-  } else if (hp->type == IO_OUT_PARTITIONED_TYPE)
-    in = io_out_partitioned_in(hp);
-  else if (hp->type == IO_OUT_NORMAL_TYPE)
+    break;
+
+
+  case IO_OUT_PARTITIONED_TYPE: {
+    io_out_partitioned_t *h = (io_out_partitioned_t *)hp;
+    if (h->ext_options.compare) {
+      /* merged global cursor across sorted partitions */
+      in = io_out_partitioned_merged_in(h);
+    } else {
+      /* sequential cursor across unsorted partitions */
+      in = io_out_partitioned_sequential_in(h);
+    }
+    if (in)
+      io_in_destroy_out(in, hp, NULL);
+    else
+      io_out_destroy(hp);
+     break;
+   }
+
+  case IO_OUT_SORTED_THEN_PARTITIONED_TYPE:
+    /* finalize & return merged cursor */
+    in = io_out_sorted_then_partitioned_in(hp);
+    break;
+
+  case IO_OUT_NORMAL_TYPE:
     in = io_out_normal_in(hp);
+    break;
+
+  default:
+    io_out_destroy(hp);
+    break;
+  }
+
   return in;
 }
 
@@ -1511,14 +1675,108 @@ void io_out_sorted_destroy(io_out_t *hp) {
   aml_free(h);
 }
 
+static bool write_stp_record(io_out_t *hp, const void *d, size_t len) {
+  io_out_sorted_then_partitioned_t *h = (io_out_sorted_then_partitioned_t *)hp;
+  return io_out_write_record(h->sorted, d, len);
+}
+
+static io_out_t *io_out_sorted_then_partitioned_init(
+    const char *filename, io_out_options_t *options,
+    io_out_ext_options_t *ext_options) {
+  if (!filename) abort();                   /* partitioned outputs need a base filename */
+  if (!ext_options || !ext_options->compare) abort();  /* global sort requires compare */
+
+  /* Phase 1: global sorter */
+  io_out_t *sorted = io_out_sorted_init(filename, options, ext_options);
+  if (!sorted) return NULL;
+
+  size_t flen = strlen(filename) + 1;
+  io_out_sorted_then_partitioned_t *h =
+      (io_out_sorted_then_partitioned_t *)aml_zalloc(sizeof(*h) + flen);
+
+  h->type = IO_OUT_SORTED_THEN_PARTITIONED_TYPE;
+  h->options = *options;
+  h->write_record = write_stp_record;
+  h->filename = (char *)(h + 1);
+  memcpy(h->filename, filename, flen);
+  h->sorted = sorted;
+  h->ext_options = *ext_options;  /* keep comparator for downstream merges if needed */
+
+  return (io_out_t *)h;
+}
+
+/* Finalize: materialize partitions without re-sorting per-partition */
+static void io_out_sorted_then_partitioned_destroy(io_out_t *hp) {
+  io_out_sorted_then_partitioned_t *h = (io_out_sorted_then_partitioned_t *)hp;
+
+  /* Get globally sorted stream (consumes the inner sorter’s buffers/runs) */
+  io_in_t *in = _io_out_sorted_in(h->sorted);
+
+  if (in) {
+    /* Phase 2: fan-out into partitions WITHOUT per-partition sort */
+    io_out_ext_options_t pext = h->ext_options;
+    pext.sort_before_partitioning = false;
+    pext.sort_while_partitioning = false;
+    /* Disable per-part sorting path in io_out_partitioned_init */
+    pext.compare = NULL;
+    pext.int_compare = NULL;
+    pext.reducer = NULL;
+    pext.int_reducer = NULL;
+
+    io_out_t *part = io_out_partitioned_init(h->filename, &h->options, &pext);
+
+    io_record_t *r;
+    while ((r = io_in_advance(in)) != NULL)
+      io_out_write_record(part, r->record, r->length);
+
+    io_out_destroy(part);
+    io_in_destroy(in);
+  }
+
+  /* Clean up inner sorter (this just removes temps & handles acks/extras) */
+  io_out_sorted_destroy(h->sorted);
+
+  aml_free(h);
+}
+
+/* ============================================================
+   Create a merged cursor for io_out_sorted_then_partitioned
+   ============================================================ */
+static io_in_t *io_out_sorted_then_partitioned_in(io_out_t *hp) {
+  io_out_sorted_then_partitioned_t *h =
+      (io_out_sorted_then_partitioned_t *)hp;
+
+  /* Finalize: ensure partitioned outputs exist */
+  io_out_sorted_then_partitioned_destroy(hp);
+
+  /* Fabricate a lightweight partitioned descriptor so we can reuse merge logic */
+  io_out_partitioned_t ph;
+  memset(&ph, 0, sizeof(ph));
+  ph.filename = h->filename;
+  ph.options = h->options;
+  ph.ext_part_options = h->ext_options;
+  ph.ext_part_options.sort_before_partitioning = false;
+  ph.ext_part_options.sort_while_partitioning = false;
+  ph.num_partitions = h->ext_options.num_partitions;
+  ph.ext_part_options.partition = h->ext_options.partition;
+  ph.ext_part_options.partition_arg = h->ext_options.partition_arg;
+
+  /* Use same merged reader helper */
+  io_in_t *in = io_out_partitioned_merged_in(&ph);
+  return in;
+}
+
 static void io_out_ext_destroy(io_out_t *hp) {
   if (hp->type == IO_OUT_PARTITIONED_TYPE)
     io_out_partitioned_destroy(hp);
   else if (hp->type == IO_OUT_SORTED_TYPE)
     io_out_sorted_destroy(hp);
+  else if (hp->type == IO_OUT_SORTED_THEN_PARTITIONED_TYPE)
+    io_out_sorted_then_partitioned_destroy(hp);
   else
     abort();
 }
+
 
 io_out_t *io_out_ext_init(const char *filename, io_out_options_t *options,
                           io_out_ext_options_t *ext_options) {
@@ -1539,11 +1797,29 @@ io_out_t *io_out_ext_init(const char *filename, io_out_options_t *options,
 
   ext_options = &eopts;
 
-  if (ext_options->partition && !ext_options->sort_before_partitioning)
-    return io_out_partitioned_init(filename, options, ext_options);
-  else if (ext_options->compare)
+  /*
+   * Partition always implies fan-out, unless explicitly sort-before-partitioning.
+   * Sorting and partitioning can co-exist:
+   *   - sort_while_partitioning: each partition is written sorted
+   *   - sort_before_partitioning: global sort, then partition
+   */
+  if (ext_options->partition) {
+    if (ext_options->sort_before_partitioning) {
+      if (!ext_options->compare) {
+        fprintf(stderr, "ERROR: sort_before_partitioning requires compare\n");
+        abort();
+      }
+      return io_out_sorted_then_partitioned_init(filename, options, ext_options);
+    } else {
+      // fan-out across partitions
+      return io_out_partitioned_init(filename, options, ext_options);
+    }
+  }
+
+  // No partitioner: plain sort if compare set
+  if (ext_options->compare)
     return io_out_sorted_init(filename, options, ext_options);
-  else if (ext_options->partition)
-    return io_out_partitioned_init(filename, options, ext_options);
+
+  // Otherwise: just a single unsorted output file
   return io_out_init(filename, options);
 }

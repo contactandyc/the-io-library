@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2019–2025 Andy Curtis <contactandyc@gmail.com>
+# SPDX-FileCopyrightText: 2019–2026 Andy Curtis <contactandyc@gmail.com>
 # SPDX-FileCopyrightText: 2024–2025 Knode.ai — technical questions: contact Andy (above)
 # SPDX-License-Identifier: Apache-2.0
 
@@ -18,6 +18,8 @@ find_library(M_LIB m)
 # ---- Test executables ----
 set(TEST_EXECUTABLES "")
 add_executable(test_io  src/test_io.c)
+
+target_include_directories(test_io PRIVATE  ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 list(APPEND TEST_EXECUTABLES test_io)
 
@@ -60,6 +62,8 @@ endif()
 add_test(NAME test_io COMMAND $<TARGET_FILE:test_io>)
 add_executable(test_io_in  src/test_io_in.c)
 
+target_include_directories(test_io_in PRIVATE  ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
 list(APPEND TEST_EXECUTABLES test_io_in)
 
 set_target_properties(test_io_in PROPERTIES
@@ -100,6 +104,8 @@ endif()
 
 add_test(NAME test_io_in COMMAND $<TARGET_FILE:test_io_in>)
 add_executable(test_io_out  src/test_io_out.c)
+
+target_include_directories(test_io_out PRIVATE  ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 list(APPEND TEST_EXECUTABLES test_io_out)
 
