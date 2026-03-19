@@ -1,0 +1,26 @@
+project_title: The IO Library
+version: 0.0.1
+
+profile: andy-curtis/andy-curtis-knode
+template: cmake-c-git
+
+depends_on:
+  - https://github.com/contactandyc/a-memory-library.git
+  - https://github.com/contactandyc/the-macro-library.git
+  - https://github.com/contactandyc/the-lz4-library.git
+  - system/ZLIB
+apps:
+  context:
+    dest: examples
+    depends_on:
+      - https://github.com/contactandyc/the-io-library.git
+  map-reduce:
+    binaries:
+      - dump_files_1
+      - dump_files_2
+      - dump_files_3
+      - dump_files_4
+      - dump_files_5
+      - dump_files_6
+      - dump_files_7
+      - list_files
