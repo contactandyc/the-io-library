@@ -52,8 +52,11 @@ find_package(ZLIB REQUIRED)
 
 # ---- Dependencies (PkgConfig Shims) ----
 
+
 # ── Library variants (ALL are defined & built/installed) ──────────────────────
-add_library(the_io_library_debug  src/io.c  src/io_in.c  src/io_in_base.c  src/io_log.c  src/io_out.c)
+
+add_library(the_io_library_debug STATIC
+  src/io.c  src/io_in.c  src/io_in_base.c  src/io_log.c  src/io_out.c)
 
 target_include_directories(the_io_library_debug PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -87,7 +90,9 @@ install(TARGETS the_io_library_debug EXPORT the_io_libraryTargets
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
   INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-add_library(the_io_library_memory  src/io.c  src/io_in.c  src/io_in_base.c  src/io_log.c  src/io_out.c)
+
+add_library(the_io_library_memory STATIC
+  src/io.c  src/io_in.c  src/io_in_base.c  src/io_log.c  src/io_out.c)
 
 target_include_directories(the_io_library_memory PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -124,7 +129,9 @@ install(TARGETS the_io_library_memory EXPORT the_io_libraryTargets
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
   INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-add_library(the_io_library_static  src/io.c  src/io_in.c  src/io_in_base.c  src/io_log.c  src/io_out.c)
+
+add_library(the_io_library_static STATIC
+  src/io.c  src/io_in.c  src/io_in_base.c  src/io_log.c  src/io_out.c)
 
 target_include_directories(the_io_library_static PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -158,7 +165,9 @@ install(TARGETS the_io_library_static EXPORT the_io_libraryTargets
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
   INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-add_library(the_io_library_shared  src/io.c  src/io_in.c  src/io_in_base.c  src/io_log.c  src/io_out.c)
+
+add_library(the_io_library_shared SHARED
+  src/io.c  src/io_in.c  src/io_in_base.c  src/io_log.c  src/io_out.c)
 
 target_include_directories(the_io_library_shared PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
