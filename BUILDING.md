@@ -21,7 +21,7 @@ sudo cmake --install .
 
 
 
-## Install dependencies (from `cmake.libraries`)
+## Install dependencies (from `deps.libraries`)
 
 
 ### System packages (required)
