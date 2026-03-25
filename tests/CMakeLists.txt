@@ -1,5 +1,6 @@
-# SPDX-FileCopyrightText: 2019–2026 Andy Curtis <contactandyc@gmail.com>
-# SPDX-FileCopyrightText: 2024–2025 Knode.ai — technical questions: contact Andy (above)
+# SPDX-FileCopyrightText: 2026 Andy Curtis <contactandyc@gmail.com>
+# SPDX-FileCopyrightText: 2026–2025 Knode.ai
+# Maintainer: Andy Curtis <contactandyc@gmail.com>
 # SPDX-License-Identifier: Apache-2.0
 
 # CMakeLists.txt for tests
@@ -24,7 +25,7 @@ target_include_directories(test_io PRIVATE  ${CMAKE_CURRENT_SOURCE_DIR}/src)
 list(APPEND TEST_EXECUTABLES test_io)
 
 set_target_properties(test_io PROPERTIES
-  C_STANDARD 23
+  C_STANDARD 17
   C_STANDARD_REQUIRED YES
 )
 if("CXX" IN_LIST CMAKE_PROJECT_LANGUAGES)
@@ -67,7 +68,7 @@ target_include_directories(test_io_in PRIVATE  ${CMAKE_CURRENT_SOURCE_DIR}/src)
 list(APPEND TEST_EXECUTABLES test_io_in)
 
 set_target_properties(test_io_in PROPERTIES
-  C_STANDARD 23
+  C_STANDARD 17
   C_STANDARD_REQUIRED YES
 )
 if("CXX" IN_LIST CMAKE_PROJECT_LANGUAGES)
@@ -110,7 +111,7 @@ target_include_directories(test_io_out PRIVATE  ${CMAKE_CURRENT_SOURCE_DIR}/src)
 list(APPEND TEST_EXECUTABLES test_io_out)
 
 set_target_properties(test_io_out PROPERTIES
-  C_STANDARD 23
+  C_STANDARD 17
   C_STANDARD_REQUIRED YES
 )
 if("CXX" IN_LIST CMAKE_PROJECT_LANGUAGES)

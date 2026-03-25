@@ -1,11 +1,12 @@
-# SPDX-FileCopyrightText: 2019–2026 Andy Curtis <contactandyc@gmail.com>
-# SPDX-FileCopyrightText: 2024–2025 Knode.ai — technical questions: contact Andy (above)
+# SPDX-FileCopyrightText: 2026 Andy Curtis <contactandyc@gmail.com>
+# SPDX-FileCopyrightText: 2026–2025 Knode.ai
+# Maintainer: Andy Curtis <contactandyc@gmail.com>
 # SPDX-License-Identifier: Apache-2.0
 
 cmake_minimum_required(VERSION 3.20)
 
 # A small "apps" project that builds example/demo binaries.
-project(the-io-library_map-reduce LANGUAGES C)
+project(The IO Library_map-reduce LANGUAGES C)
 
 # Optional math lib on POSIX
 find_library(M_LIB m)
@@ -24,7 +25,7 @@ target_include_directories(dump_files_1 PRIVATE  ${CMAKE_CURRENT_SOURCE_DIR}/src
 
 # Language standards
 set_target_properties(dump_files_1 PROPERTIES
-  C_STANDARD 23
+  C_STANDARD 17
   C_STANDARD_REQUIRED YES
 )
 if("CXX" IN_LIST CMAKE_PROJECT_LANGUAGES)
@@ -57,7 +58,7 @@ target_include_directories(dump_files_2 PRIVATE  ${CMAKE_CURRENT_SOURCE_DIR}/src
 
 # Language standards
 set_target_properties(dump_files_2 PROPERTIES
-  C_STANDARD 23
+  C_STANDARD 17
   C_STANDARD_REQUIRED YES
 )
 if("CXX" IN_LIST CMAKE_PROJECT_LANGUAGES)
@@ -90,7 +91,7 @@ target_include_directories(dump_files_3 PRIVATE  ${CMAKE_CURRENT_SOURCE_DIR}/src
 
 # Language standards
 set_target_properties(dump_files_3 PROPERTIES
-  C_STANDARD 23
+  C_STANDARD 17
   C_STANDARD_REQUIRED YES
 )
 if("CXX" IN_LIST CMAKE_PROJECT_LANGUAGES)
@@ -123,7 +124,7 @@ target_include_directories(dump_files_4 PRIVATE  ${CMAKE_CURRENT_SOURCE_DIR}/src
 
 # Language standards
 set_target_properties(dump_files_4 PROPERTIES
-  C_STANDARD 23
+  C_STANDARD 17
   C_STANDARD_REQUIRED YES
 )
 if("CXX" IN_LIST CMAKE_PROJECT_LANGUAGES)
@@ -156,7 +157,7 @@ target_include_directories(dump_files_5 PRIVATE  ${CMAKE_CURRENT_SOURCE_DIR}/src
 
 # Language standards
 set_target_properties(dump_files_5 PROPERTIES
-  C_STANDARD 23
+  C_STANDARD 17
   C_STANDARD_REQUIRED YES
 )
 if("CXX" IN_LIST CMAKE_PROJECT_LANGUAGES)
@@ -189,7 +190,7 @@ target_include_directories(dump_files_6 PRIVATE  ${CMAKE_CURRENT_SOURCE_DIR}/src
 
 # Language standards
 set_target_properties(dump_files_6 PROPERTIES
-  C_STANDARD 23
+  C_STANDARD 17
   C_STANDARD_REQUIRED YES
 )
 if("CXX" IN_LIST CMAKE_PROJECT_LANGUAGES)
@@ -222,7 +223,7 @@ target_include_directories(dump_files_7 PRIVATE  ${CMAKE_CURRENT_SOURCE_DIR}/src
 
 # Language standards
 set_target_properties(dump_files_7 PROPERTIES
-  C_STANDARD 23
+  C_STANDARD 17
   C_STANDARD_REQUIRED YES
 )
 if("CXX" IN_LIST CMAKE_PROJECT_LANGUAGES)
@@ -255,7 +256,7 @@ target_include_directories(list_files PRIVATE  ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 # Language standards
 set_target_properties(list_files PROPERTIES
-  C_STANDARD 23
+  C_STANDARD 17
   C_STANDARD_REQUIRED YES
 )
 if("CXX" IN_LIST CMAKE_PROJECT_LANGUAGES)

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# SPDX-FileCopyrightText: 2019–2026 Andy Curtis <contactandyc@gmail.com>
-# SPDX-FileCopyrightText: 2024–2025 Knode.ai — technical questions: contact Andy (above)
+# SPDX-FileCopyrightText: 2026 Andy Curtis <contactandyc@gmail.com>
+# SPDX-FileCopyrightText: 2026–2025 Knode.ai
+# Maintainer: Andy Curtis <contactandyc@gmail.com>
 # SPDX-License-Identifier: Apache-2.0
 
 set -Eeuo pipefail

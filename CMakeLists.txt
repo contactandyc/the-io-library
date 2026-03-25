@@ -1,5 +1,6 @@
-# SPDX-FileCopyrightText: 2019–2026 Andy Curtis <contactandyc@gmail.com>
-# SPDX-FileCopyrightText: 2024–2025 Knode.ai — technical questions: contact Andy (above)
+# SPDX-FileCopyrightText: 2026 Andy Curtis <contactandyc@gmail.com>
+# SPDX-FileCopyrightText: 2026–2025 Knode.ai
+# Maintainer: Andy Curtis <contactandyc@gmail.com>
 # SPDX-License-Identifier: Apache-2.0
 
 # CMakeLists.txt for libraries (regular or header-only)
@@ -64,7 +65,7 @@ target_include_directories(the_io_library_debug PUBLIC
 )
 
 set_target_properties(the_io_library_debug PROPERTIES
-  C_STANDARD 23
+  C_STANDARD 99
   C_STANDARD_REQUIRED YES
   POSITION_INDEPENDENT_CODE ON
 )
@@ -100,7 +101,7 @@ target_include_directories(the_io_library_memory PUBLIC
 )
 
 set_target_properties(the_io_library_memory PROPERTIES
-  C_STANDARD 23
+  C_STANDARD 99
   C_STANDARD_REQUIRED YES
   POSITION_INDEPENDENT_CODE ON
 )
@@ -139,7 +140,7 @@ target_include_directories(the_io_library_static PUBLIC
 )
 
 set_target_properties(the_io_library_static PROPERTIES
-  C_STANDARD 23
+  C_STANDARD 99
   C_STANDARD_REQUIRED YES
   POSITION_INDEPENDENT_CODE ON
 )
@@ -175,7 +176,7 @@ target_include_directories(the_io_library_shared PUBLIC
 )
 
 set_target_properties(the_io_library_shared PROPERTIES
-  C_STANDARD 23
+  C_STANDARD 99
   C_STANDARD_REQUIRED YES
   POSITION_INDEPENDENT_CODE ON
 )
