@@ -1,5 +1,5 @@
-# SPDX-FileCopyrightText: 2026 Andy Curtis <contactandyc@gmail.com>
-# SPDX-FileCopyrightText: 2026–2025 Knode.ai
+# SPDX-FileCopyrightText: 2019–2026 Andy Curtis <contactandyc@gmail.com>
+# SPDX-FileCopyrightText: 2024–2025 Knode.ai
 # Maintainer: Andy Curtis <contactandyc@gmail.com>
 # SPDX-License-Identifier: Apache-2.0
 
@@ -57,7 +57,7 @@ find_package(ZLIB REQUIRED)
 # ── Library variants (ALL are defined & built/installed) ──────────────────────
 
 add_library(the_io_library_debug STATIC
-  src/io.c  src/io_in.c  src/io_in_base.c  src/io_log.c  src/io_out.c)
+  src/io.c  src/io_in.c  src/io_in_base.c  src/io_log.c  src/io_out.c  src/the_io_library.c)
 
 target_include_directories(the_io_library_debug PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -93,7 +93,7 @@ install(TARGETS the_io_library_debug EXPORT the_io_libraryTargets
   INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 add_library(the_io_library_memory STATIC
-  src/io.c  src/io_in.c  src/io_in_base.c  src/io_log.c  src/io_out.c)
+  src/io.c  src/io_in.c  src/io_in_base.c  src/io_log.c  src/io_out.c  src/the_io_library.c)
 
 target_include_directories(the_io_library_memory PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -132,7 +132,7 @@ install(TARGETS the_io_library_memory EXPORT the_io_libraryTargets
   INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 add_library(the_io_library_static STATIC
-  src/io.c  src/io_in.c  src/io_in_base.c  src/io_log.c  src/io_out.c)
+  src/io.c  src/io_in.c  src/io_in_base.c  src/io_log.c  src/io_out.c  src/the_io_library.c)
 
 target_include_directories(the_io_library_static PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -168,7 +168,7 @@ install(TARGETS the_io_library_static EXPORT the_io_libraryTargets
   INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 add_library(the_io_library_shared SHARED
-  src/io.c  src/io_in.c  src/io_in_base.c  src/io_log.c  src/io_out.c)
+  src/io.c  src/io_in.c  src/io_in_base.c  src/io_log.c  src/io_out.c  src/the_io_library.c)
 
 target_include_directories(the_io_library_shared PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
