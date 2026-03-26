@@ -35,7 +35,7 @@ sudo apt-get update && sudo apt-get install -y zlib1g-dev
 ### Development tooling (optional)
 
 ```bash
-sudo apt-get update && sudo apt-get install -y python3 python3-venv python3-pip valgrind gdb perl autoconf automake libtool
+sudo apt-get update && sudo apt-get install -y valgrind gdb perl autoconf automake libtool
 ```
 
 
