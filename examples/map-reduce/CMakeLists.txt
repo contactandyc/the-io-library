@@ -1,20 +1,18 @@
 # SPDX-FileCopyrightText: 2019–2026 Andy Curtis <contactandyc@gmail.com>
-# SPDX-FileCopyrightText: 2024–2025 Knode.ai — technical questions: contact Andy (above)
+# SPDX-FileCopyrightText: 2024–2025 Knode.ai
 # SPDX-License-Identifier: Apache-2.0
+#
+# Maintainer: Andy Curtis <contactandyc@gmail.com>
 
 cmake_minimum_required(VERSION 3.20)
 
 # A small "apps" project that builds example/demo binaries.
-project(the-io-library_map-reduce LANGUAGES C)
+project(the_io_library_map-reduce LANGUAGES C)
 
 # Optional math lib on POSIX
 find_library(M_LIB m)
 
 # Bring in suite-level dependencies derived by the renderer
-find_package(a_memory_library CONFIG REQUIRED)
-find_package(the_macro_library CONFIG REQUIRED)
-find_package(the_lz4_library CONFIG REQUIRED)
-find_package(ZLIB REQUIRED)
 find_package(the_io_library CONFIG REQUIRED)
 
 # ---- Binaries ----
@@ -35,7 +33,7 @@ if("CXX" IN_LIST CMAKE_PROJECT_LANGUAGES)
 endif()
 
 # Link the union of deps computed for this app context
-target_link_libraries(dump_files_1 PRIVATE  a_memory_library::a_memory_library  the_macro_library::the_macro_library  the_lz4_library::the_lz4_library  ZLIB::ZLIB  the_io_library::the_io_library)
+target_link_libraries(dump_files_1 PRIVATE  the_io_library::the_io_library)
 
 # Optional libm
 if(M_LIB)
@@ -68,7 +66,7 @@ if("CXX" IN_LIST CMAKE_PROJECT_LANGUAGES)
 endif()
 
 # Link the union of deps computed for this app context
-target_link_libraries(dump_files_2 PRIVATE  a_memory_library::a_memory_library  the_macro_library::the_macro_library  the_lz4_library::the_lz4_library  ZLIB::ZLIB  the_io_library::the_io_library)
+target_link_libraries(dump_files_2 PRIVATE  the_io_library::the_io_library)
 
 # Optional libm
 if(M_LIB)
@@ -101,7 +99,7 @@ if("CXX" IN_LIST CMAKE_PROJECT_LANGUAGES)
 endif()
 
 # Link the union of deps computed for this app context
-target_link_libraries(dump_files_3 PRIVATE  a_memory_library::a_memory_library  the_macro_library::the_macro_library  the_lz4_library::the_lz4_library  ZLIB::ZLIB  the_io_library::the_io_library)
+target_link_libraries(dump_files_3 PRIVATE  the_io_library::the_io_library)
 
 # Optional libm
 if(M_LIB)
@@ -134,7 +132,7 @@ if("CXX" IN_LIST CMAKE_PROJECT_LANGUAGES)
 endif()
 
 # Link the union of deps computed for this app context
-target_link_libraries(dump_files_4 PRIVATE  a_memory_library::a_memory_library  the_macro_library::the_macro_library  the_lz4_library::the_lz4_library  ZLIB::ZLIB  the_io_library::the_io_library)
+target_link_libraries(dump_files_4 PRIVATE  the_io_library::the_io_library)
 
 # Optional libm
 if(M_LIB)
@@ -167,7 +165,7 @@ if("CXX" IN_LIST CMAKE_PROJECT_LANGUAGES)
 endif()
 
 # Link the union of deps computed for this app context
-target_link_libraries(dump_files_5 PRIVATE  a_memory_library::a_memory_library  the_macro_library::the_macro_library  the_lz4_library::the_lz4_library  ZLIB::ZLIB  the_io_library::the_io_library)
+target_link_libraries(dump_files_5 PRIVATE  the_io_library::the_io_library)
 
 # Optional libm
 if(M_LIB)
@@ -200,7 +198,7 @@ if("CXX" IN_LIST CMAKE_PROJECT_LANGUAGES)
 endif()
 
 # Link the union of deps computed for this app context
-target_link_libraries(dump_files_6 PRIVATE  a_memory_library::a_memory_library  the_macro_library::the_macro_library  the_lz4_library::the_lz4_library  ZLIB::ZLIB  the_io_library::the_io_library)
+target_link_libraries(dump_files_6 PRIVATE  the_io_library::the_io_library)
 
 # Optional libm
 if(M_LIB)
@@ -233,7 +231,7 @@ if("CXX" IN_LIST CMAKE_PROJECT_LANGUAGES)
 endif()
 
 # Link the union of deps computed for this app context
-target_link_libraries(dump_files_7 PRIVATE  a_memory_library::a_memory_library  the_macro_library::the_macro_library  the_lz4_library::the_lz4_library  ZLIB::ZLIB  the_io_library::the_io_library)
+target_link_libraries(dump_files_7 PRIVATE  the_io_library::the_io_library)
 
 # Optional libm
 if(M_LIB)
@@ -266,7 +264,7 @@ if("CXX" IN_LIST CMAKE_PROJECT_LANGUAGES)
 endif()
 
 # Link the union of deps computed for this app context
-target_link_libraries(list_files PRIVATE  a_memory_library::a_memory_library  the_macro_library::the_macro_library  the_lz4_library::the_lz4_library  ZLIB::ZLIB  the_io_library::the_io_library)
+target_link_libraries(list_files PRIVATE  the_io_library::the_io_library)
 
 # Optional libm
 if(M_LIB)
