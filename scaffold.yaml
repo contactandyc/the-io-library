@@ -2,31 +2,18 @@ project_title: The IO Library
 version: 0.0.1
 stack: c/cmake
 date_created: 2019-08-01
+profile: default-knode
 
-# ── 1. V2 Engine Routing ──
 base_templates:
   repo: https://github.com/contactandyc/scaffold-templates.git
   ref: main
 
-# ── 2. Project Architecture & Standards ──
-includes:
-  - source: library-templates/c-cmake-git
-  - source: licenses/apache-2.0
-  - source: profiles/default
-
-# ── 3. Licenses & Legal ──
-copyrights:
-  - contributors.andy_curtis
-  - contributors.knode
-
-# ── 4. Monorepo & Source Dependencies ──
 depends_on:
   - https://github.com/contactandyc/a-memory-library.git
   - https://github.com/contactandyc/the-macro-library.git
   - https://github.com/contactandyc/the-lz4-library.git
   - system/ZLIB
 
-# ── 5. Apps & Examples ──
 apps:
   context:
     dest: examples

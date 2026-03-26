@@ -1,7 +1,8 @@
 // SPDX-FileCopyrightText: 2019–2026 Andy Curtis <contactandyc@gmail.com>
 // SPDX-FileCopyrightText: 2024–2025 Knode.ai
-// Maintainer: Andy Curtis <contactandyc@gmail.com>
 // SPDX-License-Identifier: Apache-2.0
+//
+// Maintainer: Andy Curtis <contactandyc@gmail.com>
 
 struct io_in_base_s;
 typedef struct io_in_base_s io_in_base_t;

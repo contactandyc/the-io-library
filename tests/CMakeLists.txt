@@ -1,7 +1,8 @@
 # SPDX-FileCopyrightText: 2019–2026 Andy Curtis <contactandyc@gmail.com>
 # SPDX-FileCopyrightText: 2024–2025 Knode.ai
-# Maintainer: Andy Curtis <contactandyc@gmail.com>
 # SPDX-License-Identifier: Apache-2.0
+#
+# Maintainer: Andy Curtis <contactandyc@gmail.com>
 
 # CMakeLists.txt for tests
 cmake_minimum_required(VERSION 3.20)
@@ -25,7 +26,7 @@ target_include_directories(test_io PRIVATE  ${CMAKE_CURRENT_SOURCE_DIR}/src)
 list(APPEND TEST_EXECUTABLES test_io)
 
 set_target_properties(test_io PROPERTIES
-  C_STANDARD 17
+  C_STANDARD 23
   C_STANDARD_REQUIRED YES
 )
 if("CXX" IN_LIST CMAKE_PROJECT_LANGUAGES)
@@ -68,7 +69,7 @@ target_include_directories(test_io_in PRIVATE  ${CMAKE_CURRENT_SOURCE_DIR}/src)
 list(APPEND TEST_EXECUTABLES test_io_in)
 
 set_target_properties(test_io_in PROPERTIES
-  C_STANDARD 17
+  C_STANDARD 23
   C_STANDARD_REQUIRED YES
 )
 if("CXX" IN_LIST CMAKE_PROJECT_LANGUAGES)
@@ -111,7 +112,7 @@ target_include_directories(test_io_out PRIVATE  ${CMAKE_CURRENT_SOURCE_DIR}/src)
 list(APPEND TEST_EXECUTABLES test_io_out)
 
 set_target_properties(test_io_out PROPERTIES
-  C_STANDARD 17
+  C_STANDARD 23
   C_STANDARD_REQUIRED YES
 )
 if("CXX" IN_LIST CMAKE_PROJECT_LANGUAGES)
@@ -147,49 +148,6 @@ if(A_ENABLE_COVERAGE)
 endif()
 
 add_test(NAME test_io_out COMMAND $<TARGET_FILE:test_io_out>)
-add_executable(test_the_io_library  src/test_the_io_library.c)
-
-target_include_directories(test_the_io_library PRIVATE  ${CMAKE_CURRENT_SOURCE_DIR}/src)
-
-list(APPEND TEST_EXECUTABLES test_the_io_library)
-
-set_target_properties(test_the_io_library PROPERTIES
-  C_STANDARD 17
-  C_STANDARD_REQUIRED YES
-)
-if("CXX" IN_LIST CMAKE_PROJECT_LANGUAGES)
-  set_target_properties(test_the_io_library PROPERTIES
-    CXX_STANDARD 17
-    CXX_STANDARD_REQUIRED YES
-  )
-endif()
-
-if(NOT TARGET the_io_library::the_io_library)
-  find_package(the_io_library CONFIG REQUIRED)
-endif()
-target_link_libraries(test_the_io_library PRIVATE the_io_library::the_io_library)
-
-if(M_LIB)
-  target_link_libraries(test_the_io_library PRIVATE ${M_LIB})
-endif()
-
-if(MSVC)
-  target_compile_options(test_the_io_library PRIVATE /W4)
-else()
-  target_compile_options(test_the_io_library PRIVATE -Wall -Wextra -Wpedantic)
-endif()
-
-if(A_ENABLE_COVERAGE)
-  if (CMAKE_C_COMPILER_ID MATCHES "Clang")
-    target_compile_options(test_the_io_library PRIVATE -O0 -g -fprofile-instr-generate -fcoverage-mapping)
-    target_link_options(test_the_io_library PRIVATE -fprofile-instr-generate -fcoverage-mapping)
-  elseif (CMAKE_C_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(test_the_io_library PRIVATE -O0 -g --coverage)
-    target_link_options(test_the_io_library PRIVATE --coverage)
-  endif()
-endif()
-
-add_test(NAME test_the_io_library COMMAND $<TARGET_FILE:test_the_io_library>)
 
 enable_testing()
 

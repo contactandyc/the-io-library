@@ -1,7 +1,8 @@
 # SPDX-FileCopyrightText: 2019–2026 Andy Curtis <contactandyc@gmail.com>
 # SPDX-FileCopyrightText: 2024–2025 Knode.ai
-# Maintainer: Andy Curtis <contactandyc@gmail.com>
 # SPDX-License-Identifier: Apache-2.0
+#
+# Maintainer: Andy Curtis <contactandyc@gmail.com>
 
 # CMakeLists.txt for libraries (regular or header-only)
 cmake_minimum_required(VERSION 3.20)
@@ -57,7 +58,7 @@ find_package(ZLIB REQUIRED)
 # ── Library variants (ALL are defined & built/installed) ──────────────────────
 
 add_library(the_io_library_debug STATIC
-  src/io.c  src/io_in.c  src/io_in_base.c  src/io_log.c  src/io_out.c  src/the_io_library.c)
+  src/io.c  src/io_in.c  src/io_in_base.c  src/io_log.c  src/io_out.c)
 
 target_include_directories(the_io_library_debug PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -65,7 +66,7 @@ target_include_directories(the_io_library_debug PUBLIC
 )
 
 set_target_properties(the_io_library_debug PROPERTIES
-  C_STANDARD 99
+  C_STANDARD 23
   C_STANDARD_REQUIRED YES
   POSITION_INDEPENDENT_CODE ON
 )
@@ -93,7 +94,7 @@ install(TARGETS the_io_library_debug EXPORT the_io_libraryTargets
   INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 add_library(the_io_library_memory STATIC
-  src/io.c  src/io_in.c  src/io_in_base.c  src/io_log.c  src/io_out.c  src/the_io_library.c)
+  src/io.c  src/io_in.c  src/io_in_base.c  src/io_log.c  src/io_out.c)
 
 target_include_directories(the_io_library_memory PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -101,7 +102,7 @@ target_include_directories(the_io_library_memory PUBLIC
 )
 
 set_target_properties(the_io_library_memory PROPERTIES
-  C_STANDARD 99
+  C_STANDARD 23
   C_STANDARD_REQUIRED YES
   POSITION_INDEPENDENT_CODE ON
 )
@@ -132,7 +133,7 @@ install(TARGETS the_io_library_memory EXPORT the_io_libraryTargets
   INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 add_library(the_io_library_static STATIC
-  src/io.c  src/io_in.c  src/io_in_base.c  src/io_log.c  src/io_out.c  src/the_io_library.c)
+  src/io.c  src/io_in.c  src/io_in_base.c  src/io_log.c  src/io_out.c)
 
 target_include_directories(the_io_library_static PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -140,7 +141,7 @@ target_include_directories(the_io_library_static PUBLIC
 )
 
 set_target_properties(the_io_library_static PROPERTIES
-  C_STANDARD 99
+  C_STANDARD 23
   C_STANDARD_REQUIRED YES
   POSITION_INDEPENDENT_CODE ON
 )
@@ -168,7 +169,7 @@ install(TARGETS the_io_library_static EXPORT the_io_libraryTargets
   INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 add_library(the_io_library_shared SHARED
-  src/io.c  src/io_in.c  src/io_in_base.c  src/io_log.c  src/io_out.c  src/the_io_library.c)
+  src/io.c  src/io_in.c  src/io_in_base.c  src/io_log.c  src/io_out.c)
 
 target_include_directories(the_io_library_shared PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -176,7 +177,7 @@ target_include_directories(the_io_library_shared PUBLIC
 )
 
 set_target_properties(the_io_library_shared PROPERTIES
-  C_STANDARD 99
+  C_STANDARD 23
   C_STANDARD_REQUIRED YES
   POSITION_INDEPENDENT_CODE ON
 )

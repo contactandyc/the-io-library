@@ -23,6 +23,15 @@ RUN apt-get update && apt-get install -y \
     ca-certificates \
  && rm -rf /var/lib/apt/lists/*
 
+# Development tooling (optional)
+RUN apt-get update && apt-get install -y \
+    valgrind \
+    gdb \
+    perl \
+    autoconf \
+    automake \
+    libtool \
+ && rm -rf /var/lib/apt/lists/*
 
 # --- Install CMake from official binaries (arch-aware) ------------------------
 RUN set -eux; \
