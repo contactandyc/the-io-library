@@ -14,13 +14,9 @@ depends_on:
   - https://github.com/contactandyc/the-lz4-library.git
   - system/ZLIB
 
-apps:
-  context:
-    dest: examples
-    depends_on:
-      - https://github.com/contactandyc/the-io-library.git
+examples:
   map-reduce:
-    binaries:
+    targets:
       - dump_files_1
       - dump_files_2
       - dump_files_3
