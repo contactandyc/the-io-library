@@ -17,11 +17,26 @@ option(A_ENABLE_COVERAGE "Enable code coverage instrumentation" OFF)
 
 find_library(M_LIB m)
 
-# ---- Test executables ----
-set(TEST_EXECUTABLES "")
-add_executable(test_io  src/test_io.c)
+find_package(a_memory_library CONFIG REQUIRED)
+find_package(the_macro_library CONFIG REQUIRED)
+find_package(the_lz4_library CONFIG REQUIRED)
+find_package(ZLIB REQUIRED)
 
-target_include_directories(test_io PRIVATE  ${CMAKE_CURRENT_SOURCE_DIR}/src)
+# Fallback for standalone test builds (when not included via add_subdirectory)
+if(NOT TARGET the_io_library::the_io_library)
+  find_package(the_io_library CONFIG REQUIRED)
+endif()
+
+set(TEST_EXECUTABLES "")
+
+# ---- Targets ----
+add_executable(test_io
+  src/test_io.c
+)
+
+target_include_directories(test_io PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/../src
+)
 
 list(APPEND TEST_EXECUTABLES test_io)
 
@@ -36,9 +51,10 @@ if("CXX" IN_LIST CMAKE_PROJECT_LANGUAGES)
   )
 endif()
 
-if(NOT TARGET the_io_library::the_io_library)
-  find_package(the_io_library CONFIG REQUIRED)
-endif()
+target_link_libraries(test_io PRIVATE a_memory_library::a_memory_library)
+target_link_libraries(test_io PRIVATE the_macro_library::the_macro_library)
+target_link_libraries(test_io PRIVATE the_lz4_library::the_lz4_library)
+target_link_libraries(test_io PRIVATE ZLIB::ZLIB)
 target_link_libraries(test_io PRIVATE the_io_library::the_io_library)
 
 if(M_LIB)
@@ -62,9 +78,13 @@ if(A_ENABLE_COVERAGE)
 endif()
 
 add_test(NAME test_io COMMAND $<TARGET_FILE:test_io>)
-add_executable(test_io_in  src/test_io_in.c)
+add_executable(test_io_in
+  src/test_io_in.c
+)
 
-target_include_directories(test_io_in PRIVATE  ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_include_directories(test_io_in PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/../src
+)
 
 list(APPEND TEST_EXECUTABLES test_io_in)
 
@@ -79,9 +99,10 @@ if("CXX" IN_LIST CMAKE_PROJECT_LANGUAGES)
   )
 endif()
 
-if(NOT TARGET the_io_library::the_io_library)
-  find_package(the_io_library CONFIG REQUIRED)
-endif()
+target_link_libraries(test_io_in PRIVATE a_memory_library::a_memory_library)
+target_link_libraries(test_io_in PRIVATE the_macro_library::the_macro_library)
+target_link_libraries(test_io_in PRIVATE the_lz4_library::the_lz4_library)
+target_link_libraries(test_io_in PRIVATE ZLIB::ZLIB)
 target_link_libraries(test_io_in PRIVATE the_io_library::the_io_library)
 
 if(M_LIB)
@@ -105,9 +126,13 @@ if(A_ENABLE_COVERAGE)
 endif()
 
 add_test(NAME test_io_in COMMAND $<TARGET_FILE:test_io_in>)
-add_executable(test_io_out  src/test_io_out.c)
+add_executable(test_io_out
+  src/test_io_out.c
+)
 
-target_include_directories(test_io_out PRIVATE  ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_include_directories(test_io_out PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/../src
+)
 
 list(APPEND TEST_EXECUTABLES test_io_out)
 
@@ -122,9 +147,10 @@ if("CXX" IN_LIST CMAKE_PROJECT_LANGUAGES)
   )
 endif()
 
-if(NOT TARGET the_io_library::the_io_library)
-  find_package(the_io_library CONFIG REQUIRED)
-endif()
+target_link_libraries(test_io_out PRIVATE a_memory_library::a_memory_library)
+target_link_libraries(test_io_out PRIVATE the_macro_library::the_macro_library)
+target_link_libraries(test_io_out PRIVATE the_lz4_library::the_lz4_library)
+target_link_libraries(test_io_out PRIVATE ZLIB::ZLIB)
 target_link_libraries(test_io_out PRIVATE the_io_library::the_io_library)
 
 if(M_LIB)
