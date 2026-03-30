@@ -26,10 +26,12 @@ void io_out_ext_options_fixed_reducer(io_out_ext_options_t *h,
 
 typedef bool (*io_out_write_cb)(io_out_t *h, const void *d, size_t len);
 
-const int IO_OUT_NORMAL_TYPE = 0;
-const int IO_OUT_PARTITIONED_TYPE = 1;
-const int IO_OUT_SORTED_TYPE = 2;
-const int IO_OUT_SORTED_THEN_PARTITIONED_TYPE = 3;
+enum {
+  IO_OUT_NORMAL_TYPE = 0,
+  IO_OUT_PARTITIONED_TYPE = 1,
+  IO_OUT_SORTED_TYPE = 2,
+  IO_OUT_SORTED_THEN_PARTITIONED_TYPE = 3
+};
 
 struct io_out_s {
   int type;

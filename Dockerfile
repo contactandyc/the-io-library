@@ -15,6 +15,7 @@ RUN apt-get update && apt-get install -y \
     git \
     curl \
     wget \
+    abigail-tools \
     tar \
     unzip \
     zip \
@@ -31,6 +32,9 @@ RUN apt-get update && apt-get install -y \
     autoconf \
     automake \
     libtool \
+    python3 \
+    python3-venv \
+    python3-pip \
  && rm -rf /var/lib/apt/lists/*
 
 # --- Install CMake from official binaries (arch-aware) ------------------------
@@ -55,39 +59,35 @@ USER dev
 WORKDIR /workspace
 
 # --- Optional Python venv for tools ------------------------------------------
-RUN python3 -m venv /opt/venv && /opt/venv/bin/pip install --upgrade pip
+RUN sudo python3 -m venv /opt/venv && \
+    sudo chown -R dev:dev /opt/venv && \
+    /opt/venv/bin/pip install --upgrade pip
 ENV PATH="/opt/venv/bin:${PATH}"
-
-# --- Build & install a-memory-library ---
-RUN set -eux; \
-    git clone --depth 1 --single-branch "https://github.com/contactandyc/a-memory-library.git" "a-memory-library"; \
-    cd "a-memory-library"; \
-    ./build.sh clean && \
-    ./build.sh install
-; \
-    cd ..; \
-    rm -rf "a-memory-library"
-
-# --- Build & install the-lz4-library ---
-RUN set -eux; \
-    git clone --depth 1 --single-branch "https://github.com/contactandyc/the-lz4-library.git" "the-lz4-library"; \
-    cd "the-lz4-library"; \
-    ./build.sh clean && \
-    ./build.sh install
-; \
-    cd ..; \
-    rm -rf "the-lz4-library"
 
 # --- Build & install the-macro-library ---
 RUN set -eux; \
     git clone --depth 1 --single-branch "https://github.com/contactandyc/the-macro-library.git" "the-macro-library"; \
     cd "the-macro-library"; \
     ./build.sh clean && \
-    ./build.sh install
-; \
+    ./build.sh install; \
     cd ..; \
     rm -rf "the-macro-library"
-
+# --- Build & install a-memory-library ---
+RUN set -eux; \
+    git clone --depth 1 --single-branch "https://github.com/contactandyc/a-memory-library.git" "a-memory-library"; \
+    cd "a-memory-library"; \
+    ./build.sh clean && \
+    ./build.sh install; \
+    cd ..; \
+    rm -rf "a-memory-library"
+# --- Build & install the-lz4-library ---
+RUN set -eux; \
+    git clone --depth 1 --single-branch "https://github.com/contactandyc/the-lz4-library.git" "the-lz4-library"; \
+    cd "the-lz4-library"; \
+    ./build.sh clean && \
+    ./build.sh install; \
+    cd ..; \
+    rm -rf "the-lz4-library"
 
 # --- Build & install this project --------------------------------------------
 COPY --chown=dev:dev . /workspace/the-io-library
