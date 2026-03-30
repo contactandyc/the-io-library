@@ -24,11 +24,13 @@ void io_out_destroy(io_out_t *out);
 typedef io_record_t *(*io_in_advance_cb)(io_in_t *h);
 typedef io_record_t *(*io_in_advance_unique_cb)(io_in_t *h, size_t *num_r);
 
-static const int IO_IN_NORMAL_TYPE = 0; // default (due to memset)
-static const int IO_IN_EXT_TYPE = 1;
-static const int IO_IN_RECORDS_TYPE = 2;
-static const int IO_IN_LIST_TYPE = 3;
-static const int IO_IN_CB_TYPE = 4;
+enum {
+  IO_IN_NORMAL_TYPE = 0, // default (due to memset)
+  IO_IN_EXT_TYPE = 1,
+  IO_IN_RECORDS_TYPE = 2,
+  IO_IN_LIST_TYPE = 3,
+  IO_IN_CB_TYPE = 4
+};
 
 size_t io_in_count(io_in_t *h) {
   if(!h)
