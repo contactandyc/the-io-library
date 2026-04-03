@@ -1,7 +1,7 @@
 # BUILDING
 
 This project: **The IO Library**
-Version: **0.0.3**
+Version: **0.0.4**
 
 ## Local build
 
@@ -35,7 +35,7 @@ sudo apt-get update && sudo apt-get install -y zlib1g-dev
 ### Development tooling (optional)
 
 ```bash
-sudo apt-get update && sudo apt-get install -y valgrind gdb perl autoconf automake libtool python3 python3-venv python3-pip
+sudo apt-get update && sudo apt-get install -y autoconf automake gdb libtool perl python3 python3-pip python3-venv valgrind
 ```
 
 

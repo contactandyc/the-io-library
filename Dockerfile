@@ -26,15 +26,15 @@ RUN apt-get update && apt-get install -y \
 
 # Development tooling (optional)
 RUN apt-get update && apt-get install -y \
-    valgrind \
-    gdb \
-    perl \
     autoconf \
     automake \
+    gdb \
     libtool \
+    perl \
     python3 \
-    python3-venv \
     python3-pip \
+    python3-venv \
+    valgrind \
  && rm -rf /var/lib/apt/lists/*
 
 # --- Install CMake from official binaries (arch-aware) ------------------------
