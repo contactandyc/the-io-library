@@ -28,13 +28,9 @@ target_include_directories(dump_files_1 PRIVATE
 set_target_properties(dump_files_1 PROPERTIES
   C_STANDARD 23
   C_STANDARD_REQUIRED YES
+  CXX_STANDARD 17
+  CXX_STANDARD_REQUIRED YES
 )
-if("CXX" IN_LIST CMAKE_PROJECT_LANGUAGES)
-  set_target_properties(dump_files_1 PROPERTIES
-    CXX_STANDARD 17
-    CXX_STANDARD_REQUIRED YES
-  )
-endif()
 
 # Ensure examples running in library stacks link the main library!
 if(NOT TARGET the_io_library::the_io_library)
@@ -72,13 +68,9 @@ target_include_directories(dump_files_2 PRIVATE
 set_target_properties(dump_files_2 PROPERTIES
   C_STANDARD 23
   C_STANDARD_REQUIRED YES
+  CXX_STANDARD 17
+  CXX_STANDARD_REQUIRED YES
 )
-if("CXX" IN_LIST CMAKE_PROJECT_LANGUAGES)
-  set_target_properties(dump_files_2 PROPERTIES
-    CXX_STANDARD 17
-    CXX_STANDARD_REQUIRED YES
-  )
-endif()
 
 # Ensure examples running in library stacks link the main library!
 if(NOT TARGET the_io_library::the_io_library)
@@ -116,13 +108,9 @@ target_include_directories(dump_files_3 PRIVATE
 set_target_properties(dump_files_3 PROPERTIES
   C_STANDARD 23
   C_STANDARD_REQUIRED YES
+  CXX_STANDARD 17
+  CXX_STANDARD_REQUIRED YES
 )
-if("CXX" IN_LIST CMAKE_PROJECT_LANGUAGES)
-  set_target_properties(dump_files_3 PROPERTIES
-    CXX_STANDARD 17
-    CXX_STANDARD_REQUIRED YES
-  )
-endif()
 
 # Ensure examples running in library stacks link the main library!
 if(NOT TARGET the_io_library::the_io_library)
@@ -160,13 +148,9 @@ target_include_directories(dump_files_4 PRIVATE
 set_target_properties(dump_files_4 PROPERTIES
   C_STANDARD 23
   C_STANDARD_REQUIRED YES
+  CXX_STANDARD 17
+  CXX_STANDARD_REQUIRED YES
 )
-if("CXX" IN_LIST CMAKE_PROJECT_LANGUAGES)
-  set_target_properties(dump_files_4 PROPERTIES
-    CXX_STANDARD 17
-    CXX_STANDARD_REQUIRED YES
-  )
-endif()
 
 # Ensure examples running in library stacks link the main library!
 if(NOT TARGET the_io_library::the_io_library)
@@ -204,13 +188,9 @@ target_include_directories(dump_files_5 PRIVATE
 set_target_properties(dump_files_5 PROPERTIES
   C_STANDARD 23
   C_STANDARD_REQUIRED YES
+  CXX_STANDARD 17
+  CXX_STANDARD_REQUIRED YES
 )
-if("CXX" IN_LIST CMAKE_PROJECT_LANGUAGES)
-  set_target_properties(dump_files_5 PROPERTIES
-    CXX_STANDARD 17
-    CXX_STANDARD_REQUIRED YES
-  )
-endif()
 
 # Ensure examples running in library stacks link the main library!
 if(NOT TARGET the_io_library::the_io_library)
@@ -248,13 +228,9 @@ target_include_directories(dump_files_6 PRIVATE
 set_target_properties(dump_files_6 PROPERTIES
   C_STANDARD 23
   C_STANDARD_REQUIRED YES
+  CXX_STANDARD 17
+  CXX_STANDARD_REQUIRED YES
 )
-if("CXX" IN_LIST CMAKE_PROJECT_LANGUAGES)
-  set_target_properties(dump_files_6 PROPERTIES
-    CXX_STANDARD 17
-    CXX_STANDARD_REQUIRED YES
-  )
-endif()
 
 # Ensure examples running in library stacks link the main library!
 if(NOT TARGET the_io_library::the_io_library)
@@ -292,13 +268,9 @@ target_include_directories(dump_files_7 PRIVATE
 set_target_properties(dump_files_7 PROPERTIES
   C_STANDARD 23
   C_STANDARD_REQUIRED YES
+  CXX_STANDARD 17
+  CXX_STANDARD_REQUIRED YES
 )
-if("CXX" IN_LIST CMAKE_PROJECT_LANGUAGES)
-  set_target_properties(dump_files_7 PROPERTIES
-    CXX_STANDARD 17
-    CXX_STANDARD_REQUIRED YES
-  )
-endif()
 
 # Ensure examples running in library stacks link the main library!
 if(NOT TARGET the_io_library::the_io_library)
@@ -336,13 +308,9 @@ target_include_directories(list_files PRIVATE
 set_target_properties(list_files PROPERTIES
   C_STANDARD 23
   C_STANDARD_REQUIRED YES
+  CXX_STANDARD 17
+  CXX_STANDARD_REQUIRED YES
 )
-if("CXX" IN_LIST CMAKE_PROJECT_LANGUAGES)
-  set_target_properties(list_files PROPERTIES
-    CXX_STANDARD 17
-    CXX_STANDARD_REQUIRED YES
-  )
-endif()
 
 # Ensure examples running in library stacks link the main library!
 if(NOT TARGET the_io_library::the_io_library)
