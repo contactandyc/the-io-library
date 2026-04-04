@@ -43,13 +43,9 @@ list(APPEND TEST_EXECUTABLES test_io)
 set_target_properties(test_io PROPERTIES
   C_STANDARD 23
   C_STANDARD_REQUIRED YES
+  CXX_STANDARD 17
+  CXX_STANDARD_REQUIRED YES
 )
-if("CXX" IN_LIST CMAKE_PROJECT_LANGUAGES)
-  set_target_properties(test_io PROPERTIES
-    CXX_STANDARD 17
-    CXX_STANDARD_REQUIRED YES
-  )
-endif()
 
 target_link_libraries(test_io PRIVATE a_memory_library::a_memory_library)
 target_link_libraries(test_io PRIVATE the_macro_library::the_macro_library)
@@ -91,13 +87,9 @@ list(APPEND TEST_EXECUTABLES test_io_in)
 set_target_properties(test_io_in PROPERTIES
   C_STANDARD 23
   C_STANDARD_REQUIRED YES
+  CXX_STANDARD 17
+  CXX_STANDARD_REQUIRED YES
 )
-if("CXX" IN_LIST CMAKE_PROJECT_LANGUAGES)
-  set_target_properties(test_io_in PROPERTIES
-    CXX_STANDARD 17
-    CXX_STANDARD_REQUIRED YES
-  )
-endif()
 
 target_link_libraries(test_io_in PRIVATE a_memory_library::a_memory_library)
 target_link_libraries(test_io_in PRIVATE the_macro_library::the_macro_library)
@@ -139,13 +131,9 @@ list(APPEND TEST_EXECUTABLES test_io_out)
 set_target_properties(test_io_out PROPERTIES
   C_STANDARD 23
   C_STANDARD_REQUIRED YES
+  CXX_STANDARD 17
+  CXX_STANDARD_REQUIRED YES
 )
-if("CXX" IN_LIST CMAKE_PROJECT_LANGUAGES)
-  set_target_properties(test_io_out PROPERTIES
-    CXX_STANDARD 17
-    CXX_STANDARD_REQUIRED YES
-  )
-endif()
 
 target_link_libraries(test_io_out PRIVATE a_memory_library::a_memory_library)
 target_link_libraries(test_io_out PRIVATE the_macro_library::the_macro_library)
