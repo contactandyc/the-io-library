@@ -8,7 +8,7 @@
 cmake_minimum_required(VERSION 3.20)
 
 project(the_io_library
-  VERSION 0.0.4
+  VERSION 0.0.5
   LANGUAGES C
 )
 # ── Variant selection for the umbrella alias ──────────────────────────────────
@@ -27,7 +27,7 @@ if(A_ENABLE_COVERAGE)
   endif()
 endif()
 
-option(A_BUILD_ENABLE_MEMORY_PROFILE "Define a macro on the 'memory' variant" OFF)
+option(A_BUILD_ENABLE_MEMORY_PROFILE "Define a macro on the 'memory' variant" ON)
 set(A_BUILD_MEMORY_DEFINE "_AML_DEBUG_" CACHE STRING
     "Macro to define on the 'memory' variant when memory profiling is enabled")
 
