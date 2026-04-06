@@ -8,7 +8,7 @@
 cmake_minimum_required(VERSION 3.20)
 
 project(the_io_library
-  VERSION 0.0.7
+  VERSION 0.0.9
   LANGUAGES C
 )
 # ── Variant selection for the umbrella alias ──────────────────────────────────
