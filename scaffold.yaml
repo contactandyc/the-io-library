@@ -1,5 +1,5 @@
 project_title: The IO Library
-version: 0.0.7
+version: 0.0.9
 stack: c/cmake
 date_created: 2019-08-01
 profile: default-knode
