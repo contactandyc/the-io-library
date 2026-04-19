@@ -935,76 +935,56 @@ char *io_in_lz4_read_delimited(io_in_t *h, int32_t *rlen, int delim,
 
   io_in_buffer_t *b = &(h->buf);
   char *p = b->buffer + b->pos;
-
   char *sp = p;
-  // 2. search for delimiter between pos/used
   char *ep = b->buffer + b->used;
+
+  /* FIX: Hoist state so it survives buffer refills! */
+  bool in_quote = false;
+
+  // 2. search for delimiter between pos/used
   while (p < ep) {
-    if (*p == '\"') {
-       if(csv) {
-          p++;
-        encoded_quote1:
-          while(p < ep && *p != '\"')
-            p++;
-          if(p+1 < ep && p[1] == '\"') {
-            p += 2;
-            goto encoded_quote1;
-          }
-      }
-      if(p < ep)
-        p++;
-    }
-    else if (*p != delim)
+    if (csv && *p == '\"') {
+      in_quote = !in_quote;
       p++;
-    else {
+    } else if (!in_quote && *p == delim) {
       *rlen = (p - sp);
       b->pos += (*rlen) + 1;
       h->zerop = p;
       h->zero = *p;
       *p = 0;
       return sp;
+    } else {
+      p++;
     }
   }
 
-  // 3. if finished, there is no more data to read, return what is present
+  // 3. if finished
   if (b->eof) {
     b->pos = b->used;
     return end_of_block(h, rlen, sp, p, required);
   }
 
-  // 4. reset the block such that the pos starts at zero and fill rest of
-  //    block.  If pos was zero, nothing to do here
+  // 4. reset the block
   if (b->pos > 0) {
     reset_block(b);
     sp = b->buffer;
     p = sp + b->used;
-    //b->pos = b->used;
     fill_blocks(h, b);
-    char *ep = sp + b->used;
-    while (p < ep) {
-      if (*p == '\"') {
-         if(csv) {
-            p++;
-          encoded_quote2:
-            while(p < ep && *p != '\"')
-              p++;
-            if(p+1 < ep && p[1] == '\"') {
-              p += 2;
-              goto encoded_quote2;
-            }
-        }
-        if(p < ep)
-          p++;
-      }
-      else if (*p != delim)
+    char *ep_new = sp + b->used;
+
+    while (p < ep_new) {
+      if (csv && *p == '\"') {
+        in_quote = !in_quote;
         p++;
-      else {
+      } else if (!in_quote && *p == delim) {
         *rlen = (p - sp);
         b->pos += (*rlen) + 1;
         h->zerop = p;
         h->zero = *p;
         *p = 0;
         return sp;
+      } else {
+        p++;
       }
     }
     if (b->eof) {
@@ -1012,9 +992,8 @@ char *io_in_lz4_read_delimited(io_in_t *h, int32_t *rlen, int delim,
       return end_of_block(h, rlen, sp, p, required);
     }
   }
-  // 5. The delimiter was not found in b->size bytes, create a tmp buffer
-  //    that can be used to handle full result.  Make 1.5x because it'll have
-  //    to grow at least once most of the time if less than this.
+
+  // 5. tmp buffer
   h->bh = aml_buffer_init((b->used * 3) / 2);
   while (1) {
     aml_buffer_append(h->bh, b->buffer, b->used);
@@ -1024,29 +1003,19 @@ char *io_in_lz4_read_delimited(io_in_t *h, int32_t *rlen, int delim,
     p = b->buffer;
     sp = p;
     ep = p + b->used;
+
     while (p < ep) {
-      if (*p == '\"') {
-         if(csv) {
-            p++;
-          encoded_quote3:
-            while(p < ep && *p != '\"')
-              p++;
-            if(p+1 < ep && p[1] == '\"') {
-              p += 2;
-              goto encoded_quote3;
-            }
-        }
-        if(p < ep)
-          p++;
-      }
-      else if (*p != delim)
+      if (csv && *p == '\"') {
+        in_quote = !in_quote;
         p++;
-      else {
+      } else if (!in_quote && *p == delim) {
         size_t length = (p - sp);
         b->pos += length + 1;
         aml_buffer_append(h->bh, b->buffer, length);
         *rlen = aml_buffer_length(h->bh);
         return aml_buffer_data(h->bh);
+      } else {
+        p++;
       }
     }
     if (b->eof) {
@@ -1061,16 +1030,15 @@ char *io_in_lz4_read_delimited(io_in_t *h, int32_t *rlen, int delim,
       }
     }
   }
-  // should not happen
   return NULL;
 }
-
 
 char *io_in_use_buffer(io_in_t *h, io_in_buffer_t *b, uint32_t len, int32_t *rlen) {
   /* where length is greater than the
      internal buffer.  In this case, a buffer is used and
      all data is copied into it. */
-  h->bh = aml_buffer_init(len);
+  if(!h->bh)
+    h->bh = aml_buffer_init(len);
   aml_buffer_resize(h->bh, len);
   io_in_buffer_t tmp;
   tmp.buffer = aml_buffer_data(h->bh);
@@ -1086,7 +1054,7 @@ char *io_in_use_buffer(io_in_t *h, io_in_buffer_t *b, uint32_t len, int32_t *rle
     if (b->used == 0 && b->eof) {
         if (rlen)
             *rlen = tmp.pos;
-        return tmp.buffer;
+        return tmp.pos == 0 ? NULL : tmp.buffer;
     }
     else if (len <= b->used) {
         memcpy(tmp.buffer + tmp.used, b->buffer, len);

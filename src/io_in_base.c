@@ -205,42 +205,31 @@ char *io_in_base_read_delimited(io_in_base_t *h, int32_t *rlen, int delim,
   }
 
   cleanup_last_read(h);
-
   *rlen = 0;
 
   io_in_buffer_t *b = &(h->buf);
   char *p = b->buffer + b->pos;
-
   char *sp = p;
-  // 2. search for delimiter between pos/used
   char *ep = b->buffer + b->used;
+
+  /* FIX 1: Persist quote state across buffer boundaries */
+  bool in_quote = false;
+
+  // 2. search for delimiter between pos/used
   while (p < ep) {
-    if (*p == '\"') {
-       if(csv) {
-          p++;
-        encoded_quote1:
-          while(p < ep && *p != '\"')
-            p++;
-          if(p+1 < ep && p[1] == '\"') {
-            p += 2;
-            goto encoded_quote1;
-          }
-      }
-      if(p < ep)
-        p++;
-    }
-    else if (*p != delim)
+    if (csv && *p == '\"') {
+      in_quote = !in_quote; // Simple parity naturally handles escaped "" quotes
       p++;
-    else {
+    } else if (!in_quote && *p == delim) {
       *rlen = (p - sp);
       b->pos += (*rlen) + 1;
-      if (b->pos > b->used)
-        abort();
-
+      if (b->pos > b->used) abort();
       h->zerop = p;
       h->zero = *p;
       *p = 0;
       return sp;
+    } else {
+      p++;
     }
   }
 
@@ -250,41 +239,29 @@ char *io_in_base_read_delimited(io_in_base_t *h, int32_t *rlen, int delim,
     return end_of_block(h, rlen, sp, p, required);
   }
 
-  // 4. reset the block such that the pos starts at zero and fill rest of
-  //    block.  If pos was zero, nothing to do here
+  // 4. reset the block such that the pos starts at zero and fill rest of block.
   if (b->pos > 0) {
     reset_block(b);
     sp = b->buffer;
     p = sp + b->used;
-    // b->pos = b->used;
     fill_blocks(h, b);
-    char *ep = sp + b->used;
+    ep = sp + b->used; // Update ep after filling
+
+    // Resume with persisted in_quote state
     while (p < ep) {
-      if (*p == '\"') {
-         if(csv) {
-            p++;
-          encoded_quote2:
-            while(p < ep && *p != '\"')
-              p++;
-            if(p+1 < ep && p[1] == '\"') {
-              p += 2;
-              goto encoded_quote2;
-            }
-        }
-        if(p < ep)
-          p++;
-      }
-      else if (*p != delim)
+      if (csv && *p == '\"') {
+        in_quote = !in_quote;
         p++;
-      else {
+      } else if (!in_quote && *p == delim) {
         *rlen = (p - sp);
         b->pos += (*rlen) + 1;
-        if (b->pos > b->used)
-          abort();
+        if (b->pos > b->used) abort();
         h->zerop = p;
         h->zero = *p;
         *p = 0;
         return sp;
+      } else {
+        p++;
       }
     }
     if (b->eof) {
@@ -292,11 +269,9 @@ char *io_in_base_read_delimited(io_in_base_t *h, int32_t *rlen, int delim,
       return end_of_block(h, rlen, sp, p, required);
     }
   }
+
   // 5. The delimiter was not found in b->size bytes, create a tmp buffer
-  //    that can be used to handle full result.  Make 1.5x because it'll have
-  //    to grow at least once most of the time if less than this.
   h->bh = aml_buffer_init((b->used * 3) / 2);
-  // printf("buffer_init(%lu) (2)\n", (b->used * 3) / 2);
   while (1) {
     aml_buffer_append(h->bh, b->buffer, b->used);
     b->used = 0;
@@ -305,31 +280,27 @@ char *io_in_base_read_delimited(io_in_base_t *h, int32_t *rlen, int delim,
     p = b->buffer;
     sp = p;
     ep = p + b->used;
+
+    // Resume with persisted in_quote state
     while (p < ep) {
-      if (*p == '\"') {
-         if(csv) {
-            p++;
-          encoded_quote3:
-            while(p < ep && *p != '\"')
-              p++;
-            if(p+1 < ep && p[1] == '\"') {
-              p += 2;
-              goto encoded_quote3;
-            }
-        }
-        if(p < ep)
-          p++;
-      }
-      else if (*p != delim)
+      if (csv && *p == '\"') {
+        in_quote = !in_quote;
         p++;
-      else {
+      } else if (!in_quote && *p == delim) {
         size_t length = (p - sp);
         b->pos += length + 1;
-        if (b->pos > b->used)
-          abort();
+        if (b->pos > b->used) abort();
+
         aml_buffer_append(h->bh, b->buffer, length);
-        *rlen = aml_buffer_length(h->bh);
+
+        /* FIX 2: Append a NUL byte so the returned string is valid in C */
+        aml_buffer_appendc(h->bh, 0);
+
+        /* Return length excluding the NUL byte */
+        *rlen = aml_buffer_length(h->bh) - 1;
         return aml_buffer_data(h->bh);
+      } else {
+        p++;
       }
     }
     if (b->eof) {
@@ -340,12 +311,12 @@ char *io_in_base_read_delimited(io_in_base_t *h, int32_t *rlen, int delim,
         return NULL;
       } else {
         aml_buffer_append(h->bh, sp, p - sp);
-        *rlen = aml_buffer_length(h->bh);
+        aml_buffer_appendc(h->bh, 0); // Null-terminate EOF condition too
+        *rlen = aml_buffer_length(h->bh) - 1;
         return aml_buffer_data(h->bh);
       }
     }
   }
-  // should not happen
   return NULL;
 }
 
