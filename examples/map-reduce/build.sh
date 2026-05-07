@@ -10,13 +10,13 @@ set -euo pipefail
 # --- Discover and source .scaffoldrc ---
 _cur="$PWD"
 while [ "$_cur" != "/" ]; do
-  if [ -f "$_cur/.scaffoldrc" ]; then
-    source "$_cur/.scaffoldrc"
+  if [ -f "$_cur/.scaffoldrc.yaml" ]; then
+    [ -f "$_cur/.scaffoldrc_c_cmake" ] && source "$_cur/.scaffoldrc_c_cmake"
     break
   fi
   _cur="$(dirname "$_cur")"
 done
-[ -z "${WORKSPACE_DIR:-}" ] && [ -f "$HOME/.scaffoldrc" ] && source "$HOME/.scaffoldrc"
+[ -z "${WORKSPACE_DIR:-}" ] && [ -f "$HOME/.scaffoldrc_c_cmake" ] && source "$HOME/.scaffoldrc_c_cmake"
 
 : "${BUILD_DIR:=build}"
 
