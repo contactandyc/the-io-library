@@ -9,6 +9,11 @@ cmake_minimum_required(VERSION 3.20)
 
 project(the_io_library_tests LANGUAGES C)
 
+if(CMAKE_PREFIX_PATH)
+  include_directories("${CMAKE_PREFIX_PATH}/include")
+  link_directories("${CMAKE_PREFIX_PATH}/lib")
+endif()
+
 set(A_BUILD_VARIANT "debug" CACHE STRING
     "Variant to link via the_io_library::the_io_library (debug|memory|static|shared)")
 set_property(CACHE A_BUILD_VARIANT PROPERTY STRINGS debug memory static shared)
@@ -30,12 +35,21 @@ endif()
 set(TEST_EXECUTABLES "")
 
 # ---- Targets ----
+# ==============================================================================
+# test_io Target (Standard Test)
+# ==============================================================================
 add_executable(test_io
   src/test_io.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/io.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/io_in.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/io_in_base.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/io_log.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/io_out.c
 )
 
 target_include_directories(test_io PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/../src
+  ${CMAKE_CURRENT_SOURCE_DIR}/../include
 )
 
 list(APPEND TEST_EXECUTABLES test_io)
@@ -74,12 +88,21 @@ if(A_ENABLE_COVERAGE)
 endif()
 
 add_test(NAME test_io COMMAND $<TARGET_FILE:test_io>)
+# ==============================================================================
+# test_io_in Target (Standard Test)
+# ==============================================================================
 add_executable(test_io_in
   src/test_io_in.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/io.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/io_in.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/io_in_base.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/io_log.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/io_out.c
 )
 
 target_include_directories(test_io_in PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/../src
+  ${CMAKE_CURRENT_SOURCE_DIR}/../include
 )
 
 list(APPEND TEST_EXECUTABLES test_io_in)
@@ -118,12 +141,21 @@ if(A_ENABLE_COVERAGE)
 endif()
 
 add_test(NAME test_io_in COMMAND $<TARGET_FILE:test_io_in>)
+# ==============================================================================
+# test_io_out Target (Standard Test)
+# ==============================================================================
 add_executable(test_io_out
   src/test_io_out.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/io.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/io_in.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/io_in_base.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/io_log.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/io_out.c
 )
 
 target_include_directories(test_io_out PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/../src
+  ${CMAKE_CURRENT_SOURCE_DIR}/../include
 )
 
 list(APPEND TEST_EXECUTABLES test_io_out)
