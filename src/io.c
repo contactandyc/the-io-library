@@ -25,10 +25,13 @@
 #define PATH_MAX 4096  // Define a reasonable fallback if PATH_MAX is not defined
 #endif
 
-_macro_sort_compare(io_sort_records, cmp_arg, io_record_t);
+_macro_sort_compare(io_sort_records, cmp_arg, io_record_t)
 
 bool io_keep_first(io_record_t *res, const io_record_t *r,
                       size_t num_r, aml_buffer_t *bh, void *tag) {
+  (void)num_r;
+  (void)bh;
+  (void)tag;
   *res = *r;
   return true;
 }
@@ -349,7 +352,7 @@ bool compare_io_file_info_last_modified(const io_file_info_t *a, const io_file_i
     return a->last_modified < b->last_modified;
 }
 
-static macro_sort(_sort_io_file_info_last_modified, io_file_info_t, compare_io_file_info_last_modified);
+static macro_sort(_sort_io_file_info_last_modified, io_file_info_t, compare_io_file_info_last_modified)
 
 void io_sort_file_info_by_last_modified(io_file_info_t *files, size_t num_files) {
     _sort_io_file_info_last_modified(files, num_files);
@@ -360,7 +363,7 @@ bool compare_io_file_info_last_modified_descending(const io_file_info_t *a, cons
     return a->last_modified < b->last_modified ? 1 : -1; // descending
 }
 
-static macro_sort(_sort_io_file_info_last_modified_descending, io_file_info_t, compare_io_file_info_last_modified_descending);
+static macro_sort(_sort_io_file_info_last_modified_descending, io_file_info_t, compare_io_file_info_last_modified_descending)
 
 void io_sort_file_info_by_last_modified_descending(io_file_info_t *files, size_t num_files) {
     _sort_io_file_info_last_modified_descending(files, num_files);
@@ -371,7 +374,7 @@ bool compare_io_file_info_size(const io_file_info_t *a, const io_file_info_t *b)
     return a->size < b->size;
 }
 
-static macro_sort(_sort_io_file_info_size, io_file_info_t, compare_io_file_info_size);
+static macro_sort(_sort_io_file_info_size, io_file_info_t, compare_io_file_info_size)
 
 void io_sort_file_info_by_size(io_file_info_t *files, size_t num_files) {
     _sort_io_file_info_size(files, num_files);
@@ -382,7 +385,7 @@ bool compare_io_file_info_size_descending(const io_file_info_t *a, const io_file
     return a->size < b->size ? 1 : -1; // descending
 }
 
-static macro_sort(_sort_io_file_info_size_descending, io_file_info_t, compare_io_file_info_size_descending);
+static macro_sort(_sort_io_file_info_size_descending, io_file_info_t, compare_io_file_info_size_descending)
 
 void io_sort_file_info_by_size_descending(io_file_info_t *files, size_t num_files) {
     _sort_io_file_info_size_descending(files, num_files);
@@ -394,7 +397,7 @@ bool compare_io_file_info_filename(const io_file_info_t *a, const io_file_info_t
     return strcmp(a->filename, b->filename);
 }
 
-static macro_sort(_sort_io_file_info_filename, io_file_info_t, compare_io_file_info_filename);
+static macro_sort(_sort_io_file_info_filename, io_file_info_t, compare_io_file_info_filename)
 
 void io_sort_file_info_by_filename(io_file_info_t *files, size_t num_files) {
     _sort_io_file_info_filename(files, num_files);
@@ -405,7 +408,7 @@ bool compare_io_file_info_filename_descending(const io_file_info_t *a, const io_
     return strcmp(b->filename, a->filename); // descending
 }
 
-static macro_sort(_sort_io_file_info_filename_descending, io_file_info_t, compare_io_file_info_filename_descending);
+static macro_sort(_sort_io_file_info_filename_descending, io_file_info_t, compare_io_file_info_filename_descending)
 
 void io_sort_file_info_by_filename_descending(io_file_info_t *files, size_t num_files) {
     _sort_io_file_info_filename_descending(files, num_files);
@@ -427,7 +430,7 @@ char *io_pool_read_file(aml_pool_t *pool, size_t *len, const char *filename) {
         size_t pos = 0;
         size_t chunk = 64 * 1024 * 1024;
         while (s > chunk) {
-            if (read(fd, buf + pos, chunk) != chunk) {
+            if (read(fd, buf + pos, chunk) != (ssize_t)chunk) {
                 close(fd);
                 return NULL;
             }
@@ -590,7 +593,7 @@ char *_io_read_file(size_t *len, const char *filename) {
       size_t pos = 0;
       size_t chunk = 64 * 1024 * 1024;
       while (s > chunk) {
-        if (read(fd, buf + pos, chunk) != chunk) {
+        if (read(fd, buf + pos, chunk) != (ssize_t)chunk) {
           aml_free(buf);
           close(fd);
           return NULL;
@@ -708,7 +711,7 @@ char *io_read_file_aligned(size_t *len, size_t alignment, const char *filename) 
       size_t pos = 0;
       size_t chunk = 16 * 1024 * 1024;
       while (s > chunk) {
-        if (read(fd, buf + pos, chunk) != chunk) {
+        if (read(fd, buf + pos, chunk) != (ssize_t)chunk) {
           free(buf);
           close(fd);
           return NULL;

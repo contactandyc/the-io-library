@@ -338,7 +338,7 @@ char *io_in_base_readz(io_in_base_t *h, int32_t *rlen, int32_t len) {
     h->zerop = ep;
     *ep = 0;
     return p;
-  } else if (len > b->size) {
+  } else if ((size_t)len > b->size) {
     if (b->eof) {
       *rlen = b->used - b->pos;
       b->pos = b->used;
@@ -381,7 +381,7 @@ char *io_in_base_readz(io_in_base_t *h, int32_t *rlen, int32_t len) {
     }
     reset_block(b);
     fill_blocks(h, b);
-    if (len > b->used)
+    if ((size_t)len > b->used)
       len = b->used;
     b->pos = len;
     if (b->pos > b->used)
@@ -416,7 +416,7 @@ char *io_in_base_read(io_in_base_t *h, int32_t len) {
     }
     reset_block(b);
     fill_blocks(h, b);
-    if (len > b->used) {
+    if ((size_t)len > b->used) {
       if(b->eof) {
         b->pos = b->used;
         return NULL;

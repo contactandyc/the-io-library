@@ -47,7 +47,7 @@ static void make_path(char *dst, size_t dstsz, const char *dir, const char *name
   else
     snprintf(dst, dstsz, "%s/%s", dir, name);
 }
-
+/*
 static void rotated_name(char *dst, size_t dstsz, const char *dir, const char *base) {
   time_t now = time(NULL);
   struct tm tmv;
@@ -57,7 +57,7 @@ static void rotated_name(char *dst, size_t dstsz, const char *dir, const char *b
   char fname[512];
   snprintf(fname, sizeof(fname), "%s-%s", base, stamp);
   make_path(dst, dstsz, dir, fname);
-}
+}*/
 
 /* ---------------- retention (directory-aware) ---------------- */
 
@@ -314,7 +314,7 @@ static off_t scan_prefix_last_valid(const char *path) {
 
     uint32_t stored;
     memcpy(&stored, buf + 8, 4);
-    bool has_ttl = stored & 1u;
+    // bool has_ttl = stored & 1u;
     const void *remain = buf + 8 + 4;
     size_t remain_len = len - (8 + 4);
     uint32_t calc = lz4_hash32(remain, remain_len);
@@ -461,7 +461,7 @@ static bool open_active(io_log_t *h) {
   h->last_rotate = time(NULL);
   return (h->active != NULL);
 }
-
+/*
 static bool rotate_if_needed(io_log_t *h) {
   time_t now = time(NULL);
   bool time_hit = (h->rotate_interval && (now - h->last_rotate >= h->rotate_interval));
@@ -481,7 +481,7 @@ static bool rotate_if_needed(io_log_t *h) {
 
   // reopen fresh active
   return open_active(h);
-}
+}*/
 
 /* ---------------- core write helper ---------------- */
 

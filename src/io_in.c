@@ -249,7 +249,7 @@ io_record_t *_advance_prefix(io_in_t *h) {
   if (length > 0) {
     int32_t len = 0;
     p = io_in_base_readz(h->base, &len, length);
-    if (len != length) {
+    if ((uint32_t)len != length) {
       h->current = NULL;
       h->num_current = 0;
       return NULL;
@@ -268,7 +268,7 @@ static inline io_record_t *_advance_fixed_(io_in_t *h, uint32_t length) {
   int32_t len = 0;
   h->num_current = 1;
   char *p = io_in_base_readz(h->base, &len, length);
-  if (len != length) {
+  if ((uint32_t)len != length) {
     h->current = NULL;
     h->num_current = 0;
     return NULL;
@@ -283,9 +283,10 @@ io_record_t *_advance_fixed(io_in_t *h) {
   return _advance_fixed_(h, h->fixed);
 }
 
-io_record_t *empty_record(io_in_t *h) { return NULL; }
+io_record_t *empty_record(io_in_t *h) { (void)h; return NULL; }
 
 io_record_t *empty_record_unique(io_in_t *h, size_t *len) {
+  (void)h;
   *len = 0;
   return NULL;
 }
@@ -327,7 +328,7 @@ io_record_t *_advance_prefix_lz4(io_in_t *h) {
   if (length > 0) {
     int32_t len = 0;
     p = io_in_lz4_readz(h, &len, length);
-    if (len != length) {
+    if ((uint32_t)len != length) {
       h->current = NULL;
       h->num_current = 0;
       return NULL;
@@ -343,7 +344,7 @@ io_record_t *_advance_prefix_lz4(io_in_t *h) {
 static inline io_record_t *_advance_fixed_lz4_(io_in_t *h, uint32_t length) {
   int32_t len = 0;
   char *p = io_in_lz4_readz(h, &len, length);
-  if (len != length) {
+  if ((uint32_t)len != length) {
     h->current = NULL;
     h->num_current = 0;
     return NULL;
@@ -1203,7 +1204,7 @@ void io_in_options_abort_on_file_empty(io_in_options_t *h) {
 
 void io_in_options_tag(io_in_options_t *h, int tag) { h->tag = tag; }
 
-void io_in_options_gz(io_in_options_t *h, size_t buffer_size) { h->gz = true; }
+void io_in_options_gz(io_in_options_t *h, size_t buffer_size) { (void)buffer_size; h->gz = true; }
 
 void io_in_options_lz4(io_in_options_t *h, size_t buffer_size) {
   h->lz4 = true;
@@ -1253,7 +1254,7 @@ static inline void in_heap_init(in_heap_t *h, ssize_t mx,
   h->compare_arg = arg;
 }
 
-static inline void in_heap_clear(in_heap_t *h) { h->size = 0; }
+// static inline void in_heap_clear(in_heap_t *h) { h->size = 0; }
 
 static inline size_t in_heap_max(in_heap_t *h) { return h->max_size; }
 
@@ -1264,7 +1265,7 @@ static inline void in_heap_destroy(in_heap_t *h) {
   aml_free(h->heap);
 }
 
-static inline io_in_t **in_heap_base(in_heap_t *h) { return h->heap; }
+// static inline io_in_t **in_heap_base(in_heap_t *h) { return h->heap; }
 
 static inline size_t in_heap_size(in_heap_t *h) { return h->size; }
 
@@ -1278,7 +1279,7 @@ static inline int in_heap_compare2(in_heap_t *h, io_record_t *a,
 }
 
 void test_heap(in_heap_t *h) {
-  for (size_t i = 1; i <= h->size; i++) {
+  for (ssize_t i = 1; i <= h->size; i++) {
     if (h->heap[i] == NULL)
       abort();
   }
@@ -1695,6 +1696,7 @@ void io_in_destroy_out(io_in_t *in, io_out_t *out,
 }
 
 void default_transform(io_in_t *in, io_out_t *out, void *arg) {
+  (void)arg;
   io_record_t *r;
   while ((r = io_in_advance(in)) != NULL)
     io_out_write_record(out, r->record, r->length);

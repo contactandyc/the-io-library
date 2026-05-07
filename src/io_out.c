@@ -341,6 +341,7 @@ static io_out_t *_io_out_init_lz4(const char *filename, int fd, bool fd_owner,
 
 static io_out_t *_io_out_init_gz(const char *filename, int fd, bool fd_owner,
                                  io_out_options_t *options) {
+  (void)fd_owner;
   size_t buffer_size = options->buffer_size;
   bool append_mode = options->append_mode;
 
