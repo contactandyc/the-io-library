@@ -9,6 +9,11 @@ cmake_minimum_required(VERSION 3.20)
 # A dynamically generated examples project.
 project(the_io_library_map-reduce LANGUAGES C)
 
+if(CMAKE_PREFIX_PATH)
+  include_directories("${CMAKE_PREFIX_PATH}/include")
+  link_directories("${CMAKE_PREFIX_PATH}/lib")
+endif()
+
 find_library(M_LIB m)
 
 find_package(a_memory_library CONFIG REQUIRED)
@@ -36,7 +41,7 @@ set_target_properties(dump_files_1 PROPERTIES
 if(NOT TARGET the_io_library::the_io_library)
   find_package(the_io_library CONFIG REQUIRED)
 endif()
-target_link_libraries(dump_files_1 PRIVATE the_io_library::the_io_library)
+# target_link_libraries(dump_files_1 PRIVATE the_io_library::the_io_library)
 
 target_link_libraries(dump_files_1 PRIVATE
   a_memory_library::a_memory_library
@@ -76,7 +81,7 @@ set_target_properties(dump_files_2 PROPERTIES
 if(NOT TARGET the_io_library::the_io_library)
   find_package(the_io_library CONFIG REQUIRED)
 endif()
-target_link_libraries(dump_files_2 PRIVATE the_io_library::the_io_library)
+# target_link_libraries(dump_files_2 PRIVATE the_io_library::the_io_library)
 
 target_link_libraries(dump_files_2 PRIVATE
   a_memory_library::a_memory_library
@@ -116,7 +121,7 @@ set_target_properties(dump_files_3 PROPERTIES
 if(NOT TARGET the_io_library::the_io_library)
   find_package(the_io_library CONFIG REQUIRED)
 endif()
-target_link_libraries(dump_files_3 PRIVATE the_io_library::the_io_library)
+# target_link_libraries(dump_files_3 PRIVATE the_io_library::the_io_library)
 
 target_link_libraries(dump_files_3 PRIVATE
   a_memory_library::a_memory_library
@@ -156,7 +161,7 @@ set_target_properties(dump_files_4 PROPERTIES
 if(NOT TARGET the_io_library::the_io_library)
   find_package(the_io_library CONFIG REQUIRED)
 endif()
-target_link_libraries(dump_files_4 PRIVATE the_io_library::the_io_library)
+# target_link_libraries(dump_files_4 PRIVATE the_io_library::the_io_library)
 
 target_link_libraries(dump_files_4 PRIVATE
   a_memory_library::a_memory_library
@@ -196,7 +201,7 @@ set_target_properties(dump_files_5 PROPERTIES
 if(NOT TARGET the_io_library::the_io_library)
   find_package(the_io_library CONFIG REQUIRED)
 endif()
-target_link_libraries(dump_files_5 PRIVATE the_io_library::the_io_library)
+# target_link_libraries(dump_files_5 PRIVATE the_io_library::the_io_library)
 
 target_link_libraries(dump_files_5 PRIVATE
   a_memory_library::a_memory_library
@@ -236,7 +241,7 @@ set_target_properties(dump_files_6 PROPERTIES
 if(NOT TARGET the_io_library::the_io_library)
   find_package(the_io_library CONFIG REQUIRED)
 endif()
-target_link_libraries(dump_files_6 PRIVATE the_io_library::the_io_library)
+# target_link_libraries(dump_files_6 PRIVATE the_io_library::the_io_library)
 
 target_link_libraries(dump_files_6 PRIVATE
   a_memory_library::a_memory_library
@@ -276,7 +281,7 @@ set_target_properties(dump_files_7 PROPERTIES
 if(NOT TARGET the_io_library::the_io_library)
   find_package(the_io_library CONFIG REQUIRED)
 endif()
-target_link_libraries(dump_files_7 PRIVATE the_io_library::the_io_library)
+# target_link_libraries(dump_files_7 PRIVATE the_io_library::the_io_library)
 
 target_link_libraries(dump_files_7 PRIVATE
   a_memory_library::a_memory_library
@@ -316,7 +321,7 @@ set_target_properties(list_files PROPERTIES
 if(NOT TARGET the_io_library::the_io_library)
   find_package(the_io_library CONFIG REQUIRED)
 endif()
-target_link_libraries(list_files PRIVATE the_io_library::the_io_library)
+# target_link_libraries(list_files PRIVATE the_io_library::the_io_library)
 
 target_link_libraries(list_files PRIVATE
   a_memory_library::a_memory_library
