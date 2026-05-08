@@ -1,7 +1,7 @@
 # BUILDING
 
 This project: **The IO Library**
-Version: **0.0.11**
+Version: **0.0.12**
 
 ## Local build
 
